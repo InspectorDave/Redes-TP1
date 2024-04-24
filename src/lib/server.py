@@ -1,4 +1,6 @@
 from socket import *
+from threading import Thread
+from threading import Lock
 
 class Server:
     def __init__(self, host, port, args):
@@ -8,7 +10,7 @@ class Server:
     
     def start(self):
         serverSocket = socket(AF_INET, SOCK_DGRAM)
-        serverSocket.bind(('', self.port))
+        serverSocket.bind((self.host, self.port))
         print("The server is ready to receive")
         # ACA TENDRIAMOS QUE HACER UN LISTENER Y ACCEPTER Y LANZAR UN HILO POR CADA CLIENTE?
         while True:
