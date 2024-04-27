@@ -7,6 +7,8 @@ if __name__ == "__main__":
     if (args.host and args.port):
         client = Client(args.host, args.port, args)
         client.start()
+        #client.download()
     else:
         client = Client(DEFAULT_HOST, DEFAULT_PORT, args)
         client.start()
+        #client.download()

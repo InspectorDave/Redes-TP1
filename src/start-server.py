@@ -10,3 +10,6 @@ if __name__ == "__main__":
     else:
         server = Server(DEFAULT_HOST, DEFAULT_PORT, args)
         server.start()
+
+# El server debería tener un socket que escucha conexiones y una vez
+# conectado un cliente, asignarle un nuevo socket para la comunicacion

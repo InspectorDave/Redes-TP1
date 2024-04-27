@@ -1,12 +1,17 @@
 from socket import *
 from threading import Thread
 from threading import Lock
+from lib.constants import *
 
 class Server:
     def __init__(self, host, port, args):
         self.host = host
         self.port = port
-        return
+        self.clients = {}
+        if (args.storage is None):
+            self.storage = DEFAULT_SERVER_STORAGE
+        else:
+            self.storage = args.storage
     
     def start(self):
         serverSocket = socket(AF_INET, SOCK_DGRAM)
@@ -16,7 +21,7 @@ class Server:
         while True:
             # Se recibe directamente, no hay pasos previos
             # como "accept" o "listen" para el handshaking
-            message, clientAddress = serverSocket.recvfrom(2048)
+            message, clientAddress = serverSocket.recvfrom(BUFFER_SIZE)
             # Tomo Client Address, vean que Port imprime:
             print("Client Address: ", clientAddress)
             modifiedMessage = message.decode().upper()
