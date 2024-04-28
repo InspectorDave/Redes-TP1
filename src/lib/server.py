@@ -25,6 +25,7 @@ class Server:
             # Tomo Client Address, vean que Port imprime:
             print("Client Address: ", clientAddress)
             modifiedMessage = message.decode().upper()
+            print(modifiedMessage)
             serverSocket.sendto(modifiedMessage.encode(), clientAddress)
             print("Message sent")
             if modifiedMessage == "FIN":

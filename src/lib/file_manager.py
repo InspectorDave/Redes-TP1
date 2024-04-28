@@ -5,10 +5,9 @@ class FileManager:
     # Deberia ir leyendo por partes, en vez de guardarlo todo en una variable?
     def read_file_bytes(self, filepath):
         try:
-            with open(filepath, 'rb') as f:
-                file_content = f.read()
-                f.close()
-                return file_content
+            # Con 'with' el archivo se cierra automaticamente
+            with open(filepath, 'rb') as f: 
+                return f.read()
         except FileNotFoundError:
             print(f"Error: El archivo '{filepath}' no fue encontrado.")
         except Exception as e:

@@ -5,9 +5,10 @@ class Protocol:
     def __init__(self):
         return
 
-    def send(self, archivo, socket, host, port):
+    def send(self, file_content, socket, host, port):
         # Enviamos directamente, no hay handshaking
-        socket.sendto(archivo.encode(),(host, port))
+        print(type(file_content))
+        socket.sendto(file_content,(host, port))
         return
     
     def receive(self, socket):
