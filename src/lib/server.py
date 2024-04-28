@@ -2,6 +2,7 @@ from socket import *
 from threading import Thread
 from threading import Lock
 from lib.constants import *
+from lib.message import *
 
 class Server:
     def __init__(self, host, port, args):
@@ -24,11 +25,10 @@ class Server:
             message, clientAddress = serverSocket.recvfrom(BUFFER_SIZE)
             # Tomo Client Address, vean que Port imprime:
             print("Client Address: ", clientAddress)
-            modifiedMessage = message.decode().upper()
-            print(modifiedMessage)
-            serverSocket.sendto(modifiedMessage.encode(), clientAddress)
-            print("Message sent")
-            if modifiedMessage == "FIN":
+            print("Bytes recibidos: ", len(message))
+            msg_decoded = Message(0,0,0,0)
+            message_decoded = msg_decoded.decode(message)
+            if len(message_decoded.payload) < PAYLOAD_SIZE:
                 break
         serverSocket.close()
         return
