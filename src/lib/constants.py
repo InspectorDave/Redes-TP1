@@ -4,4 +4,5 @@ DEFAULT_PORT = 9000
 DEFAULT_SERVER_STORAGE = './sv_storage/'
 DEFAULT_DOWNLOAD_DST = './downloads/'
 
-BUFFER_SIZE = 2048
+BUFFER_SIZE = 2048 # Tamanio del mensaje (Debe ser mayor que el header)
+HEADER_SIZE = 20
