@@ -10,9 +10,9 @@ if __name__ == "__main__":
     #print(file_content)
     if (args.host and args.port):
         client = Client(args.host, args.port, args)
-        client.start()
-        client.upload("./lib/test_file_2.txt")
     else:
         client = Client(DEFAULT_HOST, DEFAULT_PORT, args)
-        client.start()
-        client.upload("./lib/test_file_2.txt")
+
+    client.start()
+    client.upload("./test_files/test_file_2.txt")
+    

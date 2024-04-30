@@ -6,9 +6,9 @@ if __name__ == "__main__":
     args = parse_download_arguments()
     if (args.host and args.port):
         client = Client(args.host, args.port, args)
-        client.start()
-        #client.download()
     else:
         client = Client(DEFAULT_HOST, DEFAULT_PORT, args)
-        client.start()
-        #client.download()
+    
+    client.start()
+    #client.download()
+    
