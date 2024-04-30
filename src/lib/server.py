@@ -18,17 +18,19 @@ class Server:
         serverSocket = socket(AF_INET, SOCK_DGRAM)
         serverSocket.bind((self.host, self.port))
         print("The server is ready to receive")
-        # ACA TENDRIAMOS QUE HACER UN LISTENER Y ACCEPTER Y LANZAR UN HILO POR CADA CLIENTE?
+
         while True:
-            # Se recibe directamente, no hay pasos previos
-            # como "accept" o "listen" para el handshaking
-            message, clientAddress = serverSocket.recvfrom(BUFFER_SIZE)
-            # Tomo Client Address, vean que Port imprime:
-            print("Client Address: ", clientAddress)
-            print("Bytes recibidos: ", len(message))
-            msg_decoded = Message(0,0,0,0)
-            message_decoded = msg_decoded.decode(message)
-            if len(message_decoded.payload) < PAYLOAD_SIZE:
-                break
-        serverSocket.close()
+            # Cada mensaje se procesa en un thread a parte. De esta manera no se rompe
+            # si llegan dos mensajes al mismo tiempo.
+            new_thread = Thread(target=self.__process_message, args=(serverSocket,))
+            new_thread.run()
+
+    def __process_message(self, serverSocket):
+        message, clientAddress = serverSocket.recvfrom(BUFFER_SIZE)
+        # Tomo Client Address, vean que Port imprime:
+        print("Client Address: ", clientAddress)
+        print("Bytes recibidos: ", len(message))
+        msg_decoded = Message(0,0,0,0)
+        # message_decoded = msg_decoded.decode(message)
+
         return
