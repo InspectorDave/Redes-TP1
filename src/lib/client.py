@@ -15,25 +15,12 @@ class Client:
     def start(self):
 
         self.perform_handshake()
-
-        # Creamos el Socket
-        #clientSocket = socket(AF_INET, SOCK_DGRAM)
-        # Habria que crear el socket de transferencia, este es el de conexion
-        #message = ' '
-        #while message.upper() != 'FIN' :
-        #    message = input("Input lowercase sentence:")
-        #    self.upload(message, clientSocket)
-        #    complete_file = self.download(clientSocket)
-        #    print(complete_file.decode())
-
-        # Cerramos
-        #clientSocket.close()
         return
 
     def upload(self, file_path):
-        # file_manager = FileManager()
-        # file_content = file_manager.read_file_bytes(file_path)
-        # self.protocol.send(file_content, self.socket, self.host, self.port)
+        file_manager = FileManager()
+        file_content = file_manager.read_file_bytes(file_path)
+        self.protocol.send(file_content, self.socket, self.host, self.port)
         return
     
     def download(self):
@@ -76,7 +63,7 @@ class Client:
 
     def send_senack(self):
         print("[LOG] Sending SENACK")
-        message = Message(Message.SENACK, Protocol.UPLOAD, random.randint(0, 1000), 0, 0, b'')
-        message_bytes = message.encode()
-        self.socket.sendto(message_bytes, (self.host, self.port))
+        message = Message(Message.SENACK, Protocol.UPLOAD, 0, 0, 0, b'')
+        message_encoded = message.encode()
+        self.socket.sendto(message_encoded, (self.host, self.port))
         return

@@ -36,7 +36,7 @@ class Server:
             print("[LOG] Message isn't INITIATE")
             return
         if clientAddress in self.clients:
-            # El cliente ya está conectado
+            # El cliente ya estaba conectado
             print("[LOG] Client already has an assigned connection")
             return
 
@@ -60,16 +60,23 @@ class Server:
 
         sendInack(dedicatedClientSocket, clientAddress)
 
-        # message, clientAddress = dedicatedClientSocket.recvfrom(BUFFER_SIZE)
-        # # Tomo Client Address, vean que Port imprime:
-        # print("Client Address: ", clientAddress)
-        # print("Bytes recibidos: ", len(message))
-        # msg_decoded = Message(0,0,0,0)
-        # # message_decoded = msg_decoded.decode(message)
+        message, clientAddress = dedicatedClientSocket.recvfrom(BUFFER_SIZE)
 
-        print("[LOG] Processed existing connection.")
+        decoded_message = Message.decode(message)
+        print("[LOG] Received message type: ", decoded_message.message_type)
 
-        return
+        if decoded_message.message_type != Message.SENACK:
+            print("[LOG] Message isn't SENACK")
+            return
+
+        while True:
+            message, clientAddress = dedicatedClientSocket.recvfrom(BUFFER_SIZE)
+            decoded_message = Message.decode(message)
+            # print("[LOG] Client Address: ", clientAddress)
+            print("[LOG] Received message type: ", decoded_message.message_type)
+            print("[LOG] Bytes recibidos: ", len(message))
+            # print("[LOG] Bytes recibidos: ", decoded_message.payload)
+            print("[LOG] Processed existing connection.")
     
 def sendInack (dedicatedClientSocket, clientAddress):
 
