@@ -3,6 +3,9 @@ from threading import Thread
 from threading import Lock
 from lib.constants import *
 from lib.message import *
+from lib.protocol import Protocol
+
+import time
 
 class Server:
     def __init__(self, host, port, args):
@@ -26,18 +29,18 @@ class Server:
     def __process_new_connetion(self, message, clientAddress):
         print("[LOG] Processing new connection...")
         
-        message_decoded = Message.decode(message)
+        message_decoded = Initiate.decode(message)
 
-        print(message_decoded.message_type)
-
-        if message_decoded.message_type != 16:
+        if message_decoded.message_type != Message.INITIATE:
             # El mensaje no es una nueva conexión
-            print("El mensaje no es una nueva conexión")
+            print("[LOG] Message isn't INITIATE")
             return
         if clientAddress in self.clients:
             # El cliente ya está conectado
-            print("El cliente ya tiene una conexión asignada")
+            print("[LOG] Client already has an assigned connection")
             return
+
+        print("[LOG] Received INITIATE")
 
         # Creo un nuevo thread para el nuevo cliente
         new_thread = Thread(target=self.__process_existing_connection, args=(clientAddress,))
@@ -64,7 +67,7 @@ class Server:
         # msg_decoded = Message(0,0,0,0)
         # # message_decoded = msg_decoded.decode(message)
 
-        print("[LOG] Processed new connection.")
+        print("[LOG] Processed existing connection.")
 
         return
     
@@ -72,7 +75,7 @@ def sendInack (dedicatedClientSocket, clientAddress):
 
     print("[LOG] Sending inack...")
 
-    message = Message(17, 0, 0, 0, 0, "0".encode())
+    message = Inack(Protocol.UPLOAD)
     message_encoded = message.encode()
 
     dedicatedClientSocket.sendto(message_encoded, clientAddress)

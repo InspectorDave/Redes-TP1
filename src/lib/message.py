@@ -1,5 +1,6 @@
 from lib.constants import *
 import struct
+import random
 
 # El header (compuesto por packet_number y ack_number) debe ser
 # menor que el HEADER_SIZE
@@ -46,8 +47,72 @@ class Initiate:
         self.transfer_type = transfer_type
         return
     
+    def encode(self):
+        encoded_message = struct.pack("!BB", self.message_type, self.transfer_type)
+        return encoded_message
+    
+    @staticmethod
+    def decode(data):
+        header_data = data[:2]
+        message_type, transfer_type = struct.unpack("!BB", header_data)
+        if message_type!=Message.INITIATE:
+            raise ValueError("Not an INITIATE")
+        return Initiate(transfer_type)
+    
 class Inack:
     def __init__(self, transfer_type):
         self.message_type = Message.INACK
         self.transfer_type = transfer_type
         return
+    
+    def encode(self):
+        encoded_message = struct.pack("!BB", self.message_type, self.transfer_type)
+        return encoded_message
+    
+    @staticmethod
+    def decode(data):
+        header_data = data[:2]
+        message_type, transfer_type = struct.unpack("!BB", header_data)
+        if message_type!=Message.INACK:
+            raise ValueError("Not an INACK")
+        return Inack(transfer_type)
+    
+class Send:
+    def __init__(self, transfer_type, packet_number, ack_number):
+        self.message_type = Message.SEND
+        self.transfer_type = transfer_type
+        self.packet_number = packet_number
+        self.ack_number = ack_number
+        return
+    
+    def encode(self):
+        encoded_message = struct.pack("!BBII", self.message_type, self.transfer_type)
+        return encoded_message
+    
+    @staticmethod
+    def decode(data):
+        header_data = data[:2]
+        message_type, transfer_type = struct.unpack("!BBII", header_data)
+        if message_type!=Message.INACK:
+            raise ValueError("Not an INACK")
+        return Inack(transfer_type)
+    
+class Senack:
+    def __init__(self, transfer_type, packet_number, ack_number):
+        self.message_type = Message.SENACK
+        self.transfer_type = transfer_type
+        self.packet_number = packet_number
+        self.ack_number = ack_number
+        return
+    
+    def encode(self):
+        encoded_message = struct.pack("!BBII", self.message_type, self.transfer_type, self.packet_number, self.ack_number)
+        return encoded_message
+    
+    @staticmethod
+    def decode(data):
+        header_data = data[:2]
+        message_type, transfer_type = struct.unpack("!BBII", header_data)
+        if message_type!=Message.INACK:
+            raise ValueError("Not an INACK")
+        return Inack(transfer_type)
