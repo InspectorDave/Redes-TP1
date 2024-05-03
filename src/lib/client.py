@@ -54,14 +54,14 @@ class Client:
 
     def send_initiate(self):
         print("[LOG] Sending INITIATE")
-        message = Initiate(Protocol.UPLOAD)
+        message = Message(Message.INITIATE, Protocol.UPLOAD, 0, 0, 0, b'')
         message_bytes = message.encode()
         self.socket.sendto(message_bytes, (self.host, self.port))
         return
     
     def receive_inack(self):
         message, serverAddress = self.socket.recvfrom(BUFFER_SIZE)
-        message_decoded = Inack.decode(message)
+        message_decoded = Message.decode(message)
 
         if message_decoded.message_type != Message.INACK:
             print("[LOG] Message isn't Inack")
@@ -76,7 +76,7 @@ class Client:
 
     def send_senack(self):
         print("[LOG] Sending SENACK")
-        message = Senack(Protocol.UPLOAD, random.randint(0, 1000), 0)
+        message = Message(Message.SENACK, Protocol.UPLOAD, random.randint(0, 1000), 0, 0, b'')
         message_bytes = message.encode()
         self.socket.sendto(message_bytes, (self.host, self.port))
         return

@@ -29,7 +29,7 @@ class Server:
     def __process_new_connetion(self, message, clientAddress):
         print("[LOG] Processing new connection...")
         
-        message_decoded = Initiate.decode(message)
+        message_decoded = Message.decode(message)
 
         if message_decoded.message_type != Message.INITIATE:
             # El mensaje no es una nueva conexión
@@ -75,7 +75,7 @@ def sendInack (dedicatedClientSocket, clientAddress):
 
     print("[LOG] Sending inack...")
 
-    message = Inack(Protocol.UPLOAD)
+    message = Message(Message.INACK, Protocol.UPLOAD, 0, 0, 0, b'')
     message_encoded = message.encode()
 
     dedicatedClientSocket.sendto(message_encoded, clientAddress)
