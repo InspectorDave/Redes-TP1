@@ -3,9 +3,12 @@ from lib.constants import BUFFER_SIZE, PAYLOAD_SIZE
 from lib.message import *
 
 class Protocol:
+
+    UPLOAD = 0
+    DOWNLOAD = 1
+
     def __init__(self):
         return
-
 
     def send(self, file_content, client_socket, host, port):
         total_length = len(file_content)

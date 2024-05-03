@@ -7,6 +7,12 @@ import struct
 # IMPORTANTE: Al agregar un campo al header 
 # hay que modificar la funcion encode() y decode() y HEADER_SIZE
 class Message:
+
+    INITIATE = 0
+    INACK = 1
+    SEND = 2
+    SENACK = 3
+
     def __init__(self, message_type, transfer_type, packet_number, ack_number, offset, payload):
         self.message_type = message_type
         self.transfer_type = transfer_type
@@ -33,3 +39,15 @@ class Message:
         payload = data[HEADER_SIZE:]
         message_type, transfer_type, packet_number, ack_number, offset = struct.unpack("!BBIII", header_data)
         return Message(message_type, transfer_type, packet_number, ack_number, offset, payload)
+
+class Initiate:
+    def __init__(self, transfer_type):
+        self.message_type = Message.INITIATE
+        self.transfer_type = transfer_type
+        return
+    
+class Inack:
+    def __init__(self, transfer_type):
+        self.message_type = Message.INACK
+        self.transfer_type = transfer_type
+        return
