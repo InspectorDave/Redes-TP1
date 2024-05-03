@@ -14,5 +14,5 @@ if __name__ == "__main__":
         client = Client(DEFAULT_HOST, DEFAULT_PORT, args)
 
     client.start()
-    client.upload("../test_files/test_file_2.txt")
+    client.upload("../test_files/test_file_4.txt")
     
