@@ -9,13 +9,15 @@ class Protocol:
 
     def send(self, file_content, client_socket, host, port):
         total_length = len(file_content)
+        message_type = 16
+        transfer_type = 0
         offset = 0
         ack_number = 0
         packet_number = 0
         while offset < total_length:
             # Obtener el siguiente bloque de datos
             block = file_content[offset:offset + PAYLOAD_SIZE]
-            message = Message(packet_number, ack_number, offset, block)
+            message = Message(message_type, transfer_type, packet_number, ack_number, offset, block)
             message_bytes = message.encode()
             
             # Enviar el bloque de datos al servidor
