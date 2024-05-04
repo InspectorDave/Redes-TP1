@@ -44,7 +44,7 @@ class Server:
 
         # Creo un nuevo thread para el nuevo cliente
         new_thread = Thread(target=self.__process_existing_connection, args=(clientAddress,))
-        new_thread.run()
+        new_thread.start()
         self.clients.append(clientAddress)
 
         print("[LOG] Processed new connection.")
