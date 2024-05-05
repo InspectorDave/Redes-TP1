@@ -37,12 +37,46 @@ class Protocol:
     def receive(self, client_socket:socket.socket):
         message_received, serverAddress = client_socket.recvfrom(BUFFER_SIZE)
         msg_decoded = Message.decode(message_received)
-        return msg_decoded
+        return msg_decoded, serverAddress
     
-    def send_ack():
+    def send_ack(self):
         return
     
-    def receive_ack():
+    def receive_ack(self):
+        return
+    
+    def perform_handshake(self, socket, host, port):
+        print("[LOG] Handshake starting...")
+        self.send_initiate(socket, host, port)
+        comm_server_address = self.receive_inack(socket, host, port)
+        self.send_senack(socket, comm_server_address[0], comm_server_address[1])
+        print("[LOG] Handshake completed")
+        return comm_server_address
+
+    def send_initiate(self, socket, host, port):
+        print("[LOG] Sending INITIATE")
+        message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
+        self.send(socket, host, port, message)
+        return
+    
+    def receive_inack(self, socket, host, port):
+        message_decoded, server_address = self.receive(socket)
+
+        if message_decoded.message_type != Message.INACK:
+            print("[LOG] Message isn't Inack")
+            return
+
+        print("[LOG] Received an Inack")
+
+        #self.host = serverAddress[0]
+        #self.port = serverAddress[1]
+
+        return server_address
+
+    def send_senack(self, socket, host, port):
+        print("[LOG] Sending SENACK")
+        message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
+        self.send(socket, host, port, message)
         return
     
 
