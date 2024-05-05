@@ -42,3 +42,6 @@ class Message:
         message_type, transfer_type, protocol_type, packet_number, \
             ack_number, offset = struct.unpack("!BBBIII", header_data)
         return Message(message_type, transfer_type, protocol_type, packet_number, ack_number, offset, payload)
+    
+    def get_payload(self):
+        return self.payload

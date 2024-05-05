@@ -16,11 +16,11 @@ class Client:
         return
 
     def upload(self, file_path):
-        self.protocol.send(file_path, self.socket, self.host, self.port)
+        self.protocol.send_file(file_path, self.socket, self.host, self.port)
         return
     
     def download(self):
-        complete_file = self.protocol.receive(socket)
+        complete_file = self.protocol.receive_file(socket)
         return complete_file
     
     def close_socket():
