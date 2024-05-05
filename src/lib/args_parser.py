@@ -44,8 +44,37 @@ def parse_server_arguments():
     return args
 
 
-def parse_download_arguments():
+def parse_upload_arguments():
     parser = argparse.ArgumentParser(prog='upload.py', description='<command description>')
+    _add_common_args(parser)
+    
+    parser.add_argument('-s',
+                        '--src',
+                        action='store',
+                        type=str,
+                        help='source file path')
+    
+    parser.add_argument('-n',
+                        '--name',
+                        action='store',
+                        type=str,
+                        help='file name')
+    
+    parser.add_argument('-r',
+                        '--protocol',
+                        action='store',
+                        type = str,
+                        help='protocol to use: s= StopAndWait; g=GoBackN',
+                        default='s')
+    
+    args = parser.parse_args()
+    if args.verbose:
+        print(args)
+    return args
+
+
+def parse_download_arguments():
+    parser = argparse.ArgumentParser(prog='download.py', description='<command description>')
     _add_common_args(parser)
     
     parser.add_argument('-d',
@@ -53,7 +82,7 @@ def parse_download_arguments():
                         metavar = 'FILEPATH',
                         action='store',
                         type=str,
-                        help='source file path')
+                        help='destination file path')
     
     parser.add_argument('-n',
                         '--name',
@@ -62,27 +91,12 @@ def parse_download_arguments():
                         type=str,
                         help='file name')
     
-    args = parser.parse_args()
-    if args.verbose:
-        print(args)
-    return args
-
-
-def parse_upload_arguments():
-    parser = argparse.ArgumentParser(prog='download.py', description='<command description>')
-    _add_common_args(parser)
-    
-    parser.add_argument('-d',
-                        '--dst',
+    parser.add_argument('-r',
+                        '--protocol',
                         action='store',
-                        type=str,
-                        help='destination file path')
-    
-    parser.add_argument('-n',
-                        '--name',
-                        action='store',
-                        type=str,
-                        help='file name')
+                        type = str,
+                        help='protocol to use: s= StopAndWait; g=GoBackN',
+                        default='s')
     
     args = parser.parse_args()
     if args.verbose:
@@ -90,7 +104,9 @@ def parse_upload_arguments():
     return args
 
 
-def _add_common_args(parser):
+
+
+def _add_common_args(parser:argparse.ArgumentParser):
     group_verbosity = parser.add_mutually_exclusive_group(required=False)
     
     group_verbosity.add_argument('-v',

@@ -1,14 +1,14 @@
 from socket import *
 from lib.constants import BUFFER_SIZE
 from lib.message import *
-from lib.protocol import Protocol
+from lib.protocol import *
 
 class Client:
     def __init__(self, host, port, args):
         self.host = host
         self.port = port
-        self.socket = socket(AF_INET, SOCK_DGRAM)
-        self.protocol = Protocol()
+        self.socket = socket.socket(AF_INET, SOCK_DGRAM)
+        self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
 
     def start(self):
 
