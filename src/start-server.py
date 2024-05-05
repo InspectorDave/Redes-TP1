@@ -4,11 +4,7 @@ from lib.constants import *
 
 if __name__ == "__main__":
     args = parse_server_arguments()
-    if (args.host and args.port):
-        server = Server(args.host, args.port, args)
-    else:
-        server = Server(DEFAULT_HOST, DEFAULT_PORT, args)
-
+    server = Server(args.host, args.port, args)
     server.start()
 
 # El server debería tener un socket que escucha conexiones y una vez

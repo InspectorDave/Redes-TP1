@@ -1,14 +1,19 @@
 from socket import *
 from lib.constants import BUFFER_SIZE
 from lib.message import *
-from lib.protocol import Protocol
+from lib.protocol import *
 
 class Client:
     def __init__(self, host, port, args):
         self.host = host
         self.port = port
-        self.socket = socket(AF_INET, SOCK_DGRAM)
-        self.protocol = Protocol()
+        self.socket = socket.socket(AF_INET, SOCK_DGRAM)
+        if (args.protocol == 's'):
+            self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
+        elif (args.protocol == 'g'):
+            self.protocol = GoBackNProtocol()
+        else:
+            raise ValueError("Error al crear el cliente")
 
     def start(self):
 
@@ -16,11 +21,11 @@ class Client:
         return
 
     def upload(self, file_path):
-        self.protocol.send(file_path, self.socket, self.host, self.port)
+        self.protocol.send_file(file_path, self.socket, self.host, self.port)
         return
     
     def download(self):
-        complete_file = self.protocol.receive(socket)
+        complete_file = self.protocol.receive_file(socket)
         return complete_file
     
     def close_socket():
@@ -37,7 +42,7 @@ class Client:
 
     def send_initiate(self):
         print("[LOG] Sending INITIATE")
-        message = Message(Message.INITIATE, Protocol.UPLOAD, 0, 0, 0, b'')
+        message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
         message_bytes = message.encode()
         self.socket.sendto(message_bytes, (self.host, self.port))
         return
@@ -59,7 +64,7 @@ class Client:
 
     def send_senack(self):
         print("[LOG] Sending SENACK")
-        message = Message(Message.SENACK, Protocol.UPLOAD, 0, 0, 0, b'')
+        message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
         message_encoded = message.encode()
         self.socket.sendto(message_encoded, (self.host, self.port))
         return
