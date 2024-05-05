@@ -8,7 +8,12 @@ class Client:
         self.host = host
         self.port = port
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
-        self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
+        if (args.protocol == 's'):
+            self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
+        elif (args.protocol == 'g'):
+            self.protocol = GoBackNProtocol()
+        else:
+            raise ValueError("Error al crear el cliente")
 
     def start(self):
 
