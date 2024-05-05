@@ -14,9 +14,10 @@ class Message:
     SEND = 2
     SENACK = 3
 
-    def __init__(self, message_type, transfer_type, packet_number, ack_number, offset, payload):
+    def __init__(self, message_type, transfer_type, protocol_type, packet_number, ack_number, offset, payload):
         self.message_type = message_type
         self.transfer_type = transfer_type
+        self.protocol_type = protocol_type
         self.packet_number = packet_number
         self.ack_number = ack_number
         self.offset = offset
@@ -26,16 +27,18 @@ class Message:
     # El primer parametro de struct.pack es el formato. Cada I representa
     # un uint32, cada B un uint8, y '!' es el formato BIG ENDIAN
     def encode(self):
-        header = struct.pack("!BBIII", self.message_type, self.transfer_type, self.packet_number, self.ack_number, self.offset)
-        #padding_length = HEADER_SIZE - len(header)
-        #if padding_length > 0:
-        #    padding = b'\x00' * padding_length
-        #    header += padding
+        header = struct.pack("!BBBIII", self.message_type, 
+                            self.transfer_type,
+                            self.protocol_type,
+                            self.packet_number,
+                            self.ack_number,
+                            self.offset)
         return header + self.payload
     
     @staticmethod
     def decode(data):
         header_data = data[:HEADER_SIZE]
         payload = data[HEADER_SIZE:]
-        message_type, transfer_type, packet_number, ack_number, offset = struct.unpack("!BBIII", header_data)
-        return Message(message_type, transfer_type, packet_number, ack_number, offset, payload)
+        message_type, transfer_type, protocol_type, packet_number, \
+            ack_number, offset = struct.unpack("!BBBIII", header_data)
+        return Message(message_type, transfer_type, protocol_type, packet_number, ack_number, offset, payload)

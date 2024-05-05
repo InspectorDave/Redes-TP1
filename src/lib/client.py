@@ -37,7 +37,7 @@ class Client:
 
     def send_initiate(self):
         print("[LOG] Sending INITIATE")
-        message = Message(Message.INITIATE, Protocol.UPLOAD, 0, 0, 0, b'')
+        message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
         message_bytes = message.encode()
         self.socket.sendto(message_bytes, (self.host, self.port))
         return
@@ -59,7 +59,7 @@ class Client:
 
     def send_senack(self):
         print("[LOG] Sending SENACK")
-        message = Message(Message.SENACK, Protocol.UPLOAD, 0, 0, 0, b'')
+        message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
         message_encoded = message.encode()
         self.socket.sendto(message_encoded, (self.host, self.port))
         return
