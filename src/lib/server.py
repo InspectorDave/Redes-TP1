@@ -3,7 +3,7 @@ from threading import Thread
 from threading import Lock
 from lib.constants import *
 from lib.message import *
-from lib.protocol import Protocol
+from lib.protocols.protocol import Protocol
 
 import time
 

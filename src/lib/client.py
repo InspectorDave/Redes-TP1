@@ -1,7 +1,9 @@
 from socket import *
 from lib.constants import BUFFER_SIZE
 from lib.message import *
-from lib.protocol import *
+from lib.protocols.protocol import *
+from lib.protocols.stop_and_wait import *
+from lib.protocols.go_back_n import *
 
 class Client:
     def __init__(self, server_host, server_port, args):
