@@ -22,7 +22,7 @@ class FileManager:
     # El filepath debe contener el nombre del archivo al final
     def open_to_write(self, filepath):
         try:
-            self.file = open(filepath, 'ab')
+            self.file = open(filepath, 'ab+')
         except Exception as e:
             print(f"Error desconocido al abrir el archivo para escribir: {e}")
     

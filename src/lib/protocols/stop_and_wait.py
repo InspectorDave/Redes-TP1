@@ -4,7 +4,7 @@ from threading import *
 
 class StopAndWaitProtocol(Protocol):
 
-    def uploader_sender_logic(self, file_path, socket:socket.socket, host, port, thread_manager, communication_queue):
+    def uploader_sender_logic(self, file_path, socket:socket.socket, host, port, thread_manager:Condition, communication_queue):
         print("Sending file using Stop and Wait Protocol")
         thread_manager.acquire()
         message_type = Message.SEND
@@ -33,7 +33,7 @@ class StopAndWaitProtocol(Protocol):
 
         file_manager.close()
 
-    def uploader_receiver_logic(self, socket:socket.socket, thread_manager, communication_queue):
+    def uploader_receiver_logic(self, socket:socket.socket, thread_manager:Condition, communication_queue):
         thread_manager.acquire()
         thread_manager.wait()
         thread_manager.release()
@@ -47,7 +47,7 @@ class StopAndWaitProtocol(Protocol):
             thread_manager.notify()
             thread_manager.release()
 
-    def downloader_sender_logic(self, socket:socket.socket, host, port, thread_manager, communication_queue):
+    def downloader_sender_logic(self, socket:socket.socket, host, port, thread_manager:Condition, communication_queue:list):
         thread_manager.acquire()
 
         while True:
@@ -59,30 +59,31 @@ class StopAndWaitProtocol(Protocol):
     def downloader_receiver_logic(self,socket:socket.socket, thread_manager, communication_queue):
         last_packet_number = 0
         ack_number = 0
+        file_manager = FileManager(FILE_MODE_WRITE, DEFAULT_SERVER_STORAGE+DEFAULT_FILE_NAME)
+        try: #Para poder hacer que se cierre el archivo en el finally
+            while True:
+                message, clientAddress = socket.recvfrom(BUFFER_SIZE)
+                thread_manager.acquire()
+                decoded_message = Message.decode(message)
 
-        while True:
-            message, clientAddress = socket.recvfrom(BUFFER_SIZE)
-            thread_manager.acquire()
-            decoded_message = Message.decode(message)
+                print("[LOG] Received message type: ", decoded_message.message_type, ", with sequence ", decoded_message.packet_number)
+                print("[LOG] Bytes recibidos: ", len(message))
+                # print("[LOG] Bytes recibidos: ", decoded_message.payload)
 
-            print("[LOG] Received message type: ", decoded_message.message_type, ", with sequence ", decoded_message.packet_number)
-            print("[LOG] Bytes recibidos: ", len(message))
-            # print("[LOG] Bytes recibidos: ", decoded_message.payload)
+                if last_packet_number == decoded_message.packet_number - 1 or last_packet_number == 0:
+                    file_manager.write_file_bytes(decoded_message.payload)
+                    print("[LOG] Writing file in ", DEFAULT_SERVER_STORAGE+DEFAULT_FILE_NAME)
 
-            if last_packet_number == decoded_message.packet_number - 1:
-                # Acá debería estar la lógica de guardar en un archivo lo recibido.
-                # A este if se entra si el paquete recibido no está repetido, si no
-                # se escribirían en el archivo 2 veces los paquetes que sabemos que están repetidos.
-                BORRAR = 0 # Esto está acá para que compile nomás :)
+                last_packet_number = decoded_message.packet_number
 
-            last_packet_number = decoded_message.packet_number
+                message_type = Message.SENACK
+                transfer_type = Protocol.UPLOAD
+                protocol_type = Protocol.STOP_AND_WAIT
+                ack_number = decoded_message.packet_number + 1
+                message_ack = Message(message_type, transfer_type, protocol_type, 0, ack_number, 0, b'')
 
-            message_type = Message.SENACK
-            transfer_type = Protocol.UPLOAD
-            protocol_type = Protocol.STOP_AND_WAIT
-            ack_number = decoded_message.packet_number + 1
-            message_ack = Message(message_type, transfer_type, protocol_type, 0, ack_number, 0, b'')
-
-            communication_queue.append(message_ack)
-            thread_manager.notify()
-            thread_manager.release()
+                communication_queue.append(message_ack)
+                thread_manager.notify()
+                thread_manager.release()
+        finally:
+            file_manager.close()
