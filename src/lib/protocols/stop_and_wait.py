@@ -4,7 +4,7 @@ from threading import *
 
 class StopAndWaitProtocol(Protocol):
 
-    def uploader_sender_logic(self, file_path, socket:socket.socket, host, port, thread_manager:Condition, communication_queue):
+    def uploader_sender_logic(self, file_path, filename, socket:socket.socket, host, port, thread_manager:Condition, communication_queue):
         print("Sending file using Stop and Wait Protocol")
         thread_manager.acquire()
         message_type = Message.SEND
@@ -13,7 +13,7 @@ class StopAndWaitProtocol(Protocol):
 
         sequence_number = random.randint(1, 1023)
 
-        file_manager = FileManager(FILE_MODE_READ, file_path)
+        file_manager = FileManager(FILE_MODE_READ, file_path, filename)
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
         while file_chunk:
@@ -56,10 +56,10 @@ class StopAndWaitProtocol(Protocol):
             sent = self.send_message(socket, host, port, message)
             print("[LOG] Sent message type " + str(message.message_type) + ", with ACK " + str(message.ack_number))
 
-    def downloader_receiver_logic(self,socket:socket.socket, thread_manager, communication_queue):
+    def downloader_receiver_logic(self,socket:socket.socket, thread_manager, communication_queue, storage_path):
         last_packet_number = 0
         ack_number = 0
-        file_manager = FileManager(FILE_MODE_WRITE, DEFAULT_SERVER_STORAGE+DEFAULT_FILE_NAME)
+        file_manager = FileManager(FILE_MODE_WRITE, storage_path, DEFAULT_FILE_NAME)
         try: #Para poder hacer que se cierre el archivo en el finally
             while True:
                 message, clientAddress = socket.recvfrom(BUFFER_SIZE)
@@ -72,7 +72,7 @@ class StopAndWaitProtocol(Protocol):
 
                 if last_packet_number == decoded_message.packet_number - 1 or last_packet_number == 0:
                     file_manager.write_file_bytes(decoded_message.payload)
-                    print("[LOG] Writing file in ", DEFAULT_SERVER_STORAGE+DEFAULT_FILE_NAME)
+                    print("[LOG] Writing file in ", storage_path+DEFAULT_FILE_NAME)
 
                 last_packet_number = decoded_message.packet_number
 

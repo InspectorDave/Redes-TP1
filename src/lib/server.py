@@ -14,10 +14,7 @@ class Server:
         self.host = host
         self.port = port
         self.clients = []
-        if (args.storage is None):
-            self.storage = DEFAULT_SERVER_STORAGE
-        else:
-            self.storage = args.storage
+        self.storage = args.storage
     
     def start(self):
         serverSocket = socket(AF_INET, SOCK_DGRAM)
@@ -76,7 +73,7 @@ class Server:
         thread_manager = Condition()
         communication_queue = []
 
-        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket, thread_manager, communication_queue,))
+        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket, thread_manager, communication_queue, self.storage,))
         thread_receiver.start()
     
         thread_sender = Thread(target=session_protocol.downloader_sender_logic, args=(dedicatedClientSocket, clientAddress[0], clientAddress[1], thread_manager, communication_queue,))
