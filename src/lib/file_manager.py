@@ -36,7 +36,7 @@ class FileManager:
     # El filepath debe contener el nombre del archivo al final
     def open_to_write(self, filepath, filename):
         try:
-            self.file = open(os.path.join(filepath, filename), 'ab+')
+            self.file = open(os.path.join(filepath, filename), 'wb')
         except Exception as e:
             print(f"Error desconocido al abrir el archivo para escribir: {e}")
     
@@ -51,7 +51,10 @@ class FileManager:
     
     def write_file_bytes(self, chunk_info):
         try:
-            self.file.write(chunk_info)
+            #print("[LOG]Chunk info: ", chunk_info)
+            bytes_written = self.file.write(chunk_info)
+            print("BYTES WRITTEN: ", bytes_written)
+            self.file.flush()
         except Exception as e:
             print(f"Error: {e}")
 

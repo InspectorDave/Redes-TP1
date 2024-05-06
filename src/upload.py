@@ -9,6 +9,6 @@ if __name__ == "__main__":
     client = Client(args.host, args.port, args)
     client.start()
     print("[LOG] Sending file")
-    print(args.src, args.name)
+    print(args.name)
     client.upload(args.src, args.name)
     

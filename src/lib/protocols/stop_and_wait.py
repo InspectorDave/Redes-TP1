@@ -59,19 +59,21 @@ class StopAndWaitProtocol(Protocol):
     def downloader_receiver_logic(self,socket:socket.socket, thread_manager, communication_queue, storage_path):
         last_packet_number = 0
         ack_number = 0
+        print("STORAGE_PATH ", storage_path)
         file_manager = FileManager(FILE_MODE_WRITE, storage_path, DEFAULT_FILE_NAME)
-        try: #Para poder hacer que se cierre el archivo en el finally
-            while True:
+        while True:
+            try: #Para poder hacer que se cierre el archivo en el finally
                 message, clientAddress = socket.recvfrom(BUFFER_SIZE)
                 thread_manager.acquire()
                 decoded_message = Message.decode(message)
 
                 print("[LOG] Received message type: ", decoded_message.message_type, ", with sequence ", decoded_message.packet_number)
                 print("[LOG] Bytes recibidos: ", len(message))
-                # print("[LOG] Bytes recibidos: ", decoded_message.payload)
+                #print("[LOG] Bytes recibidos: ", decoded_message.payload)
 
                 if last_packet_number == decoded_message.packet_number - 1 or last_packet_number == 0:
                     file_manager.write_file_bytes(decoded_message.payload)
+                    #print("PAYLOAD: ",decoded_message.payload)
                     print("[LOG] Writing file in ", storage_path+DEFAULT_FILE_NAME)
 
                 last_packet_number = decoded_message.packet_number
@@ -85,5 +87,9 @@ class StopAndWaitProtocol(Protocol):
                 communication_queue.append(message_ack)
                 thread_manager.notify()
                 thread_manager.release()
-        finally:
-            file_manager.close()
+            except Exception as e:
+                print(f"Error: {e}")
+            #finally:
+                #print("CLOSING FILE")
+                #print("FILE: ", file_manager.file)
+                #file_manager.close()
