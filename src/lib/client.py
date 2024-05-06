@@ -4,9 +4,9 @@ from lib.message import *
 from lib.protocol import *
 
 class Client:
-    def __init__(self, host, port, args):
-        self.host = host
-        self.port = port
+    def __init__(self, server_host, server_port, args):
+        self.server_host = server_host
+        self.server_port = server_port
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
         if (args.protocol == 's'):
             self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
@@ -16,12 +16,12 @@ class Client:
             raise ValueError("Error al crear el cliente")
 
     def start(self):
-        comm_server_address = self.protocol.perform_handshake(self.socket, self.host, self.port)
-        self.host, self.port = comm_server_address
+        new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port)
+        self.server_host, self.server_port = new_server_address
         return
 
     def upload(self, file_path):
-        self.protocol.send_file(file_path, self.socket, self.host, self.port)
+        self.protocol.send_file(file_path, self.socket, self.server_host, self.server_port)
         return
     
     def download(self):
@@ -31,43 +31,3 @@ class Client:
     def close_socket():
         socket.close()
         return
-
-    # def perform_handshake(self):
-    #     print("[LOG] Handshake starting...")
-    #     self.send_initiate()
-    #     self.receive_inack()
-    #     self.send_senack()
-    #     print("[LOG] Handshake completed")
-    #     return
-
-    # def send_initiate(self):
-    #     print("[LOG] Sending INITIATE")
-    #     message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
-    #     self.protocol.send(self.socket, self.host, self.port, message)
-    #     #message_bytes = message.encode()
-    #     #self.socket.sendto(message_bytes, (self.host, self.port))
-    #     return
-    
-    # def receive_inack(self):
-    #     message_decoded, serverAddress = self.protocol.receive(self.socket)
-    #     #message, serverAddress = self.socket.recvfrom(BUFFER_SIZE)
-    #     #message_decoded = Message.decode(message)
-
-    #     if message_decoded.message_type != Message.INACK:
-    #         print("[LOG] Message isn't Inack")
-    #         return
-
-    #     print("[LOG] Received an Inack")
-
-    #     self.host = serverAddress[0]
-    #     self.port = serverAddress[1]
-
-    #     return
-
-    # def send_senack(self):
-    #     print("[LOG] Sending SENACK")
-    #     message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
-    #     self.protocol.send(self.socket, self.host, self.port, message)
-    #     #message_encoded = message.encode()
-    #     #self.socket.sendto(message_encoded, (self.host, self.port))
-    #     return

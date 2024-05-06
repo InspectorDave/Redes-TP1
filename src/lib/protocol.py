@@ -18,7 +18,7 @@ class Protocol:
 
     # Recibe un socket, host, port y mensaje a enviar,
     # lo codifica y lo envia
-    def send(self, client_socket:socket.socket, host, port, message:Message):
+    def send_message(self, client_socket:socket.socket, host, port, message:Message):
         message_bytes = message.encode()
         sent = client_socket.sendto(message_bytes, (host, port))
         return sent
@@ -45,7 +45,7 @@ class Protocol:
     def receive_ack(self):
         return
     
-    def perform_handshake(self, socket, host, port):
+    def perform_client_side_handshake(self, socket, host, port):
         print("[LOG] Handshake starting...")
         self.send_initiate(socket, host, port)
         comm_server_address = self.receive_inack(socket, host, port)
@@ -56,7 +56,7 @@ class Protocol:
     def send_initiate(self, socket, host, port):
         print("[LOG] Sending INITIATE")
         message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
-        self.send(socket, host, port, message)
+        self.send_message(socket, host, port, message)
         return
     
     def receive_inack(self, socket, host, port):
@@ -68,19 +68,14 @@ class Protocol:
 
         print("[LOG] Received an Inack")
 
-        #self.host = serverAddress[0]
-        #self.port = serverAddress[1]
-
         return server_address
 
     def send_senack(self, socket, host, port):
         print("[LOG] Sending SENACK")
         message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
-        self.send(socket, host, port, message)
+        self.send_message(socket, host, port, message)
         return
     
-
-
 class StopAndWaitProtocol(Protocol):
 
     def send_file(self, file_path, client_socket, host, port):
@@ -91,7 +86,7 @@ class StopAndWaitProtocol(Protocol):
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         while file_chunk:
             message = Message(message_type, transfer_type,protocol_type, self.packet_number, self.ack_number, self.offset, file_chunk)
-            sent = self.send(client_socket, host, port, message)
+            sent = self.send_message(client_socket, host, port, message)
             self.offset += len(file_chunk)
             self.packet_number += 1
             self.ack_number += 1
@@ -109,8 +104,6 @@ class StopAndWaitProtocol(Protocol):
         file_manager.close()
         print("Receiving file using Stop and Wait Protocol")
 
-
-
 class GoBackNProtocol(Protocol):
 
     def send_file(self, file_path, client_socket, host, port):
@@ -121,7 +114,7 @@ class GoBackNProtocol(Protocol):
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         while file_chunk:
             message = Message(message_type, transfer_type,protocol_type, self.packet_number, self.ack_number, self.offset, file_chunk)
-            sent = self.send(client_socket, host, port, message)
+            sent = self.send_message(client_socket, host, port, message)
             self.offset += len(file_chunk)
             self.packet_number += 1
             self.ack_number += 1
