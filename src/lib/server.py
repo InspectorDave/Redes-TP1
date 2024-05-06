@@ -1,6 +1,5 @@
 from socket import *
-from threading import Thread
-from threading import Lock
+from threading import *
 from lib.constants import *
 from lib.message import *
 from lib.protocols.protocol import Protocol
@@ -74,9 +73,15 @@ class Server:
 
         session_protocol = ProtocolFactory.create(decoded_message.protocol_type)
 
-        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket,))
+        thread_manager = Condition()
+        comunication_queue = []
+
+        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket, thread_manager, comunication_queue,))
         thread_receiver.start()
     
+        thread_sender = Thread(target=session_protocol.downloader_sender_logic, args=(dedicatedClientSocket, thread_manager, comunication_queue,))
+        thread_sender.run()
+
 def sendInack (dedicatedClientSocket, clientAddress):
 
     print("[LOG] Sending inack...")
