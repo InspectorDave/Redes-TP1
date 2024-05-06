@@ -4,6 +4,9 @@ from threading import Lock
 from lib.constants import *
 from lib.message import *
 from lib.protocols.protocol import Protocol
+from lib.protocols.stop_and_wait import StopAndWaitProtocol
+from lib.protocols.go_back_n import GoBackNProtocol
+from lib.protocols.protocol_factory import ProtocolFactory
 
 import time
 
@@ -69,14 +72,8 @@ class Server:
             print("[LOG] Message isn't SENACK")
             return
 
-        while True:
-            message, clientAddress = dedicatedClientSocket.recvfrom(BUFFER_SIZE)
-            decoded_message = Message.decode(message)
-            # print("[LOG] Client Address: ", clientAddress)
-            print("[LOG] Received message type: ", decoded_message.message_type)
-            print("[LOG] Bytes recibidos: ", len(message))
-            # print("[LOG] Bytes recibidos: ", decoded_message.payload)
-            print("[LOG] Processed existing connection.")
+        session_protocol = ProtocolFactory.create(decoded_message.protocol_type)
+        session_protocol.receive_file(dedicatedClientSocket)
     
 def sendInack (dedicatedClientSocket, clientAddress):
 

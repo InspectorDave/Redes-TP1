@@ -3,6 +3,8 @@ from lib.protocols.protocol import *
 class StopAndWaitProtocol(Protocol):
 
     def send_file(self, file_path, client_socket, host, port):
+        print("Sending file using Stop and Wait Protocol")
+
         message_type = Message.SEND
         transfer_type = Protocol.UPLOAD
         protocol_type = Protocol.STOP_AND_WAIT
@@ -17,13 +19,19 @@ class StopAndWaitProtocol(Protocol):
             print(f"[LOG] {sent} bytes sent")
             file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         file_manager.close()        
-        print("Sending file using Stop and Wait Protocol")
 
     def receive_file(self,client_socket:socket.socket):
-        file_manager = FileManager(FILE_MODE_WRITE, DEFAULT_SERVER_STORAGE)
-        file_manager.open_to_write(DEFAULT_SERVER_STORAGE)
-        #while (not conection_finalized):
-        #    message_recv = self.receive(client_socket)
-        #    file_manager.write_file_bytes(message_recv.get_payload())
-        file_manager.close()
         print("Receiving file using Stop and Wait Protocol")
+        # file_manager = FileManager(FILE_MODE_WRITE, DEFAULT_SERVER_STORAGE)
+        # file_manager.open_to_write(DEFAULT_SERVER_STORAGE)
+
+        while True:
+            message, clientAddress = client_socket.recvfrom(BUFFER_SIZE)
+            decoded_message = Message.decode(message)
+            # print("[LOG] Client Address: ", clientAddress)
+            print("[LOG] Received message type: ", decoded_message.message_type)
+            print("[LOG] Bytes recibidos: ", len(message))
+            # print("[LOG] Bytes recibidos: ", decoded_message.payload)
+            print("[LOG] Processed existing connection.")
+
+        #file_manager.close()

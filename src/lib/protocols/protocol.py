@@ -75,4 +75,3 @@ class Protocol:
         message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
         self.send_message(socket, host, port, message)
         return
-    
