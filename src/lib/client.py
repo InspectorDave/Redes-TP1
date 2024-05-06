@@ -26,12 +26,11 @@ class Client:
 
         thread_manager = Condition()
         communication_queue = []
-
         thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self.socket, thread_manager, communication_queue))
         thread_receiver.start()
     
         thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(file_path, self.socket, self.server_host, self.server_port, thread_manager, communication_queue))
-        thread_sender.run()
+        thread_sender.start()
         return
     
     def download(self):
