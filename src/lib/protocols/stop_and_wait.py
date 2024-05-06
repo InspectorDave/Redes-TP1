@@ -20,7 +20,7 @@ class StopAndWaitProtocol(Protocol):
             file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         file_manager.close()        
 
-    def receive_file(self,client_socket:socket.socket):
+    def downloader_receiver_logic(self,client_socket:socket.socket):
         print("Receiving file using Stop and Wait Protocol")
         # file_manager = FileManager(FILE_MODE_WRITE, DEFAULT_SERVER_STORAGE)
         # file_manager.open_to_write(DEFAULT_SERVER_STORAGE)

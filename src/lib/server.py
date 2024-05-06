@@ -73,7 +73,9 @@ class Server:
             return
 
         session_protocol = ProtocolFactory.create(decoded_message.protocol_type)
-        session_protocol.receive_file(dedicatedClientSocket)
+
+        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket,))
+        thread_receiver.start()
     
 def sendInack (dedicatedClientSocket, clientAddress):
 
