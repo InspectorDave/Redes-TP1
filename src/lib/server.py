@@ -74,13 +74,14 @@ class Server:
         session_protocol = ProtocolFactory.create(decoded_message.protocol_type)
 
         thread_manager = Condition()
-        comunication_queue = []
+        communication_queue = []
 
-        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket, thread_manager, comunication_queue,))
+        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket, thread_manager, communication_queue,))
         thread_receiver.start()
     
-        thread_sender = Thread(target=session_protocol.downloader_sender_logic, args=(dedicatedClientSocket, thread_manager, comunication_queue,))
-        thread_sender.run()
+        thread_sender = Thread(target=session_protocol.downloader_sender_logic, args=(dedicatedClientSocket, thread_manager, communication_queue,))
+        thread_sender.start()
+        return
 
 def sendInack (dedicatedClientSocket, clientAddress):
 
