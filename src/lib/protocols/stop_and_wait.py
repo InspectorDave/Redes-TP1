@@ -2,7 +2,7 @@ from lib.protocols.protocol import *
 
 class StopAndWaitProtocol(Protocol):
 
-    def send_file(self, file_path, client_socket, host, port):
+    def uploader_sender_logic(self, file_path, client_socket, host, port):
         print("Sending file using Stop and Wait Protocol")
 
         message_type = Message.SEND

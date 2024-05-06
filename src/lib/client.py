@@ -23,7 +23,7 @@ class Client:
         return
 
     def upload(self, file_path):
-        self.protocol.send_file(file_path, self.socket, self.server_host, self.server_port)
+        self.protocol.uploader_sender_logic(file_path, self.socket, self.server_host, self.server_port)
         return
     
     def download(self):
