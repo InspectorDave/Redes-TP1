@@ -3,6 +3,7 @@ from lib.constants import *
 from lib.message import *
 from lib.file_manager import *
 import logging
+from lib.logging_msg import *
 
 TIME_OUT = 2
 
@@ -24,11 +25,13 @@ class Protocol:
     # Se encarga de leer el archivo, setear los nros
     # de paquetes, acks, etc y lo envia
     def send_file(self, file_path, client_socket, host, port):
-        logging.error(f"El metodo 'send_file' debe ser implementado por la subclase")
+        logging.error(f"{MSG_SEND_FILE_METHOD_NOT_IMPLEMENTED}")
+        raise NotImplementedError(f"{MSG_SEND_FILE_METHOD_NOT_IMPLEMENTED}")
     
     # Se encarga de recibir el archivo e ir escribiendolo
     def receive_file(self,client_socket:socket.socket):
-        logging.error(f"El metodo 'receive_file' debe ser implementado por la subclase")
+        logging.error(f"{MSG_RECEIVE_FILE_METHOD_NOT_IMPLEMENTED}")
+        raise NotImplementedError(f"{MSG_RECEIVE_FILE_METHOD_NOT_IMPLEMENTED}")
 
     # El receive solo se ocupa de recibir un paquete y decodificarlo
     def receive(self, client_socket:socket.socket):
@@ -43,16 +46,16 @@ class Protocol:
         return
     
     def perform_client_side_handshake(self, socket, host, port):
-        logging.info(f"[LOG] Handshake starting...")
+        logging.info(f"{MSG_HANDSHAKE_STARTING}")
         self.send_initiate(socket, host, port)
         comm_server_address = self.receive_inack(socket, host, port)
         self.send_senack(socket, comm_server_address[0], comm_server_address[1])
-        logging.info(f"[LOG] Handshake completed")
+        logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return comm_server_address
 
     def send_initiate(self, socket, host, port):
         logging.info(f"[LOG] Sending INITIATE")
-        message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, b'')
+        message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
         self.send_message(socket, host, port, message)
         return
     
@@ -60,15 +63,15 @@ class Protocol:
         message_decoded, server_address = self.receive(socket)
 
         if message_decoded.message_type != Message.INACK:
-            print(f"[LOG] Message isn't Inack")
+            logging.debug(f"{MSG_IS_NOT_INACK}")
             return
 
-        print(f"[LOG] Received an Inack")
+        logging.debug(f"{MSG_RECEIVED_INACK}")
 
         return server_address
 
     def send_senack(self, socket, host, port):
         print(f"[LOG] Sending SENACK")
-        message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, b'')
+        message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
         self.send_message(socket, host, port, message)
         return
