@@ -15,7 +15,7 @@ class Client:
         elif (args.protocol == 'g'):
             self.protocol = GoBackNProtocol()
         else:
-            raise ValueError("Error al crear el cliente")
+            logging.error(f"Error al crear el cliente")
 
     def start(self):
         new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port)
