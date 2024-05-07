@@ -4,7 +4,7 @@ from lib.message import *
 from lib.file_manager import *
 import logging
 
-TIME_OUT = 3
+TIME_OUT = 2
 
 class Protocol:
 
@@ -12,12 +12,6 @@ class Protocol:
     DOWNLOAD = 1
     STOP_AND_WAIT = 0
     GO_BACK_N = 1
-
-    def __init__(self):
-        self.packet_number = 0
-        self.ack_number = 0
-        self.offset = 0
-        return
 
     # Recibe un socket, host, port y mensaje a enviar,
     # lo codifica y lo envia

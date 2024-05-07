@@ -2,6 +2,7 @@ from lib.protocols.protocol import *
 import random
 from threading import *
 import logging
+import time
 
 class StopAndWaitProtocol(Protocol):
 
@@ -13,12 +14,13 @@ class StopAndWaitProtocol(Protocol):
         protocol_type = Protocol.STOP_AND_WAIT
 
         sequence_number = random.randint(1, 1023)
+        offset = 0
 
         file_manager = FileManager(FILE_MODE_READ, file_path, filename)
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
         while file_chunk:
-            message = Message(message_type, transfer_type,protocol_type, sequence_number, self.ack_number, self.offset, file_chunk)
+            message = Message(message_type, transfer_type,protocol_type, sequence_number, 0, offset, file_chunk)
             sent = self.send_message(socket, host, port, message)
             logging.debug(f"[LOG] Sent message type {str(message.message_type)} , with sequence {str(message.packet_number)}" )
             logging.debug(f"[LOG] {sent} bytes sent")
@@ -32,9 +34,8 @@ class StopAndWaitProtocol(Protocol):
                 continue
 
             if received_message.ack_number == sequence_number + 1:
-                self.offset += len(file_chunk)
+                offset += len(file_chunk)
                 sequence_number += 1
-                self.ack_number += 1
                 file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
         file_manager.close()
@@ -54,7 +55,6 @@ class StopAndWaitProtocol(Protocol):
                 if stop_thread.is_set():
                     break
                 self.wake_up_threads(thread_manager)
-                logging.debug(f"[LOG] Time Out on receiving socket")
                 continue
 
             thread_manager.acquire()
