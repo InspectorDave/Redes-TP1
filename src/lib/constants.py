@@ -2,11 +2,15 @@ import ctypes
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 9000
-DEFAULT_SERVER_STORAGE = './server_storage/'
+DEFAULT_SERVER_STORAGE = '../server_storage/'
 DEFAULT_DOWNLOAD_DST = './downloads/'
+DEFAULT_FILE_NAME = 'file1.txt'
+
+DEFAULT_UPLOAD_FILE_PATH = '../test_files/'
+DEFAULT_UPLOAD_FILE_NAME = 'test_file_2.txt'
 
 
-BUFFER_SIZE = 2048 # Tamanio del mensaje (Debe ser mayor que el header)
+BUFFER_SIZE = 1024 # Tamanio del mensaje (Debe ser mayor que el header)
 HEADER_SIZE = 15 # Modificar si se agregan campos al header en clase Message
 PAYLOAD_SIZE = (BUFFER_SIZE-HEADER_SIZE) # Tamanio de los datos
 

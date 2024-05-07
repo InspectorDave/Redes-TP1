@@ -1,5 +1,5 @@
 import argparse
-from lib.constants import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SERVER_STORAGE
+from lib.constants import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SERVER_STORAGE, DEFAULT_UPLOAD_FILE_NAME, DEFAULT_UPLOAD_FILE_PATH
 
 def parse_server_arguments():
     parser = argparse.ArgumentParser(prog='start-server.py', description='<command description>')
@@ -51,11 +51,13 @@ def parse_upload_arguments():
     parser.add_argument('-s',
                         '--src',
                         action='store',
+                        default=DEFAULT_UPLOAD_FILE_PATH,
                         type=str,
                         help='source file path')
     
     parser.add_argument('-n',
                         '--name',
+                        default= DEFAULT_UPLOAD_FILE_NAME,
                         action='store',
                         type=str,
                         help='file name')

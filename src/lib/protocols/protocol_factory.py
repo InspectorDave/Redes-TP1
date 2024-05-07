@@ -5,10 +5,9 @@ from lib.protocols.go_back_n import GoBackNProtocol
 class ProtocolFactory:
     @staticmethod
     def create(protocol_name):
-        match protocol_name:
-            case Protocol.STOP_AND_WAIT:
+        if (protocol_name == Protocol.STOP_AND_WAIT):
                 session_protocol = StopAndWaitProtocol()
-            case Protocol.GO_BACK_N:
+        elif (protocol_name == Protocol.GO_BACK_N):
                 session_protocol = GoBackNProtocol()
 
         return session_protocol
