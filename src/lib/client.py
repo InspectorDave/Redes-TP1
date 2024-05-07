@@ -28,11 +28,12 @@ class Client:
 
         thread_manager = Condition()
         communication_queue = []
+        stop_thread = Event()
 
-        thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self.socket, thread_manager, communication_queue))
+        thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self.socket, thread_manager, communication_queue, stop_thread))
         thread_receiver.start()
     
-        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(file_path, filename, self.socket, self.server_host, self.server_port, thread_manager, communication_queue))
+        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(file_path, filename, self.socket, self.server_host, self.server_port, thread_manager, communication_queue, stop_thread))
         thread_sender.start()
         return
     

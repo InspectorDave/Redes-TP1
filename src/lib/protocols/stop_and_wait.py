@@ -5,7 +5,7 @@ import logging
 
 class StopAndWaitProtocol(Protocol):
 
-    def uploader_sender_logic(self, file_path, filename, socket:socket.socket, host, port, thread_manager:Condition, communication_queue):
+    def uploader_sender_logic(self, file_path, filename, socket:socket.socket, host, port, thread_manager:Condition, communication_queue, stop_thread):
         print("Sending file using Stop and Wait Protocol")
         thread_manager.acquire()
         message_type = Message.SEND
@@ -38,10 +38,11 @@ class StopAndWaitProtocol(Protocol):
                 file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
         file_manager.close()
+        stop_thread.set()
         thread_manager.release()
         return
 
-    def uploader_receiver_logic(self, socket:socket.socket, thread_manager:Condition, communication_queue):
+    def uploader_receiver_logic(self, socket:socket.socket, thread_manager:Condition, communication_queue, stop_thread):
         thread_manager.acquire()
         thread_manager.wait()
         thread_manager.release()
@@ -50,6 +51,8 @@ class StopAndWaitProtocol(Protocol):
             try:
                 message, clientAddress = socket.recvfrom(BUFFER_SIZE)
             except TimeoutError:
+                if stop_thread.is_set():
+                    break
                 self.wake_up_threads(thread_manager)
                 logging.debug(f"[LOG] Time Out on receiving socket")
                 continue
