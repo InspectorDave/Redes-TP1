@@ -24,7 +24,12 @@ class StopAndWaitProtocol(Protocol):
             logging.debug(f"[LOG] {sent} bytes sent")
             thread_manager.notify()
             thread_manager.wait()
-            received_message = communication_queue.pop(0)
+
+            try:
+                received_message = communication_queue.pop(0)
+            except IndexError:
+                logging.debug(f"[LOG] No ACK received")
+                continue
 
             if received_message.ack_number == sequence_number + 1:
                 self.offset += len(file_chunk)
@@ -33,6 +38,8 @@ class StopAndWaitProtocol(Protocol):
                 file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
         file_manager.close()
+        thread_manager.release()
+        return
 
     def uploader_receiver_logic(self, socket:socket.socket, thread_manager:Condition, communication_queue):
         thread_manager.acquire()
@@ -40,7 +47,13 @@ class StopAndWaitProtocol(Protocol):
         thread_manager.release()
 
         while True:
-            message, clientAddress = socket.recvfrom(BUFFER_SIZE)
+            try:
+                message, clientAddress = socket.recvfrom(BUFFER_SIZE)
+            except TimeoutError:
+                self.wake_up_threads(thread_manager)
+                logging.debug(f"[LOG] Time Out on receiving socket")
+                continue
+
             thread_manager.acquire()
             decoded_message = Message.decode(message)
             logging.debug(f"[LOG] Received message type {str(decoded_message.message_type)}, with ACK {str(decoded_message.ack_number)}" )
@@ -94,3 +107,9 @@ class StopAndWaitProtocol(Protocol):
                 #print("CLOSING FILE")
                 #print("FILE: ", file_manager.file)
                 #file_manager.close()
+
+    def wake_up_threads(self, thread_manager):
+        thread_manager.acquire()
+        thread_manager.notify()
+        thread_manager.release()
+        return

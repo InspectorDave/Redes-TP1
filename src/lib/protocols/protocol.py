@@ -4,6 +4,8 @@ from lib.message import *
 from lib.file_manager import *
 import logging
 
+TIME_OUT = 3
+
 class Protocol:
 
     UPLOAD = 0

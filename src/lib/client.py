@@ -23,9 +23,12 @@ class Client:
         return
 
     def upload(self, file_path, filename):
+        
+        self.socket.settimeout(TIME_OUT)
 
         thread_manager = Condition()
         communication_queue = []
+
         thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self.socket, thread_manager, communication_queue))
         thread_receiver.start()
     
