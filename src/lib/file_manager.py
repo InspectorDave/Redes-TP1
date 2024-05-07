@@ -1,10 +1,11 @@
 from lib.constants import FILE_MODE_READ, FILE_MODE_WRITE
+import logging
 
 class FileManager:
     def __init__(self, mode=None, filepath=None):
         self.file = None
         if not mode or not filepath:
-            raise ValueError("Error en la creación del file manager")
+            logging.error(f"Error en la creación del file manager")
         if mode == FILE_MODE_READ:
             self.open_to_read(filepath)
         elif mode == FILE_MODE_WRITE:

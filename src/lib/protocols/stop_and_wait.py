@@ -1,6 +1,7 @@
 from lib.protocols.protocol import *
 import random
 from threading import *
+import logging
 
 class StopAndWaitProtocol(Protocol):
 
@@ -19,8 +20,8 @@ class StopAndWaitProtocol(Protocol):
         while file_chunk:
             message = Message(message_type, transfer_type,protocol_type, sequence_number, self.ack_number, self.offset, file_chunk)
             sent = self.send_message(socket, host, port, message)
-            print("[LOG] Sent message type " + str(message.message_type) + ", with sequence " + str(message.packet_number))
-            print(f"[LOG] {sent} bytes sent")
+            logging.debug(f"[LOG] Sent message type {str(message.message_type)} , with sequence {str(message.packet_number)}" )
+            logging.debug(f"[LOG] {sent} bytes sent")
             thread_manager.notify()
             thread_manager.wait()
             received_message = communication_queue.pop(0)
@@ -42,7 +43,7 @@ class StopAndWaitProtocol(Protocol):
             message, clientAddress = socket.recvfrom(BUFFER_SIZE)
             thread_manager.acquire()
             decoded_message = Message.decode(message)
-            print("[LOG] Received message type " + str(decoded_message.message_type) + ", with ACK " + str(decoded_message.ack_number))
+            logging.debug(f"[LOG] Received message type {str(decoded_message.message_type)}, with ACK {str(decoded_message.ack_number)}" )
             communication_queue.append(decoded_message)
             thread_manager.notify()
             thread_manager.release()
@@ -54,7 +55,7 @@ class StopAndWaitProtocol(Protocol):
             thread_manager.wait()
             message = communication_queue.pop(0)
             sent = self.send_message(socket, host, port, message)
-            print("[LOG] Sent message type " + str(message.message_type) + ", with ACK " + str(message.ack_number))
+            logging.debug(f"[LOG] Sent message type {str(message.message_type)}, with ACK {str(message.ack_number)}")
 
     def downloader_receiver_logic(self,socket:socket.socket, thread_manager, communication_queue):
         last_packet_number = 0
@@ -65,8 +66,8 @@ class StopAndWaitProtocol(Protocol):
             thread_manager.acquire()
             decoded_message = Message.decode(message)
 
-            print("[LOG] Received message type: ", decoded_message.message_type, ", with sequence ", decoded_message.packet_number)
-            print("[LOG] Bytes recibidos: ", len(message))
+            logging.debug(f"[LOG] Received message type: {decoded_message.message_type}, with sequence {decoded_message.packet_number}")
+            logging.debug(f"[LOG] Bytes recibidos: {len(message)}")
             # print("[LOG] Bytes recibidos: ", decoded_message.payload)
 
             if last_packet_number == decoded_message.packet_number - 1:
