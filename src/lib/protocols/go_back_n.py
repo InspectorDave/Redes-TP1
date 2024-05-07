@@ -1,4 +1,6 @@
 from lib.protocols.protocol import *
+from lib.logging_msg import *
+from lib.log import *
 
 class GoBackNProtocol(Protocol):
 
@@ -14,10 +16,10 @@ class GoBackNProtocol(Protocol):
             self.offset += len(file_chunk)
             self.packet_number += 1
             self.ack_number += 1
-            print(f"[LOG] {sent} bytes sent")
+            logging.debug(f"{MSG_BYTES_SENT} {sent}")
             file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         file_manager.close()
-        print("Sending file using Go-Back-N Protocol")
+        logging.debug(f"{MSG_SENT_USING_GO_BACK_N}")
 
     def receive_file(self,client_socket:socket.socket):
         file_manager = FileManager(FILE_MODE_WRITE, DEFAULT_SERVER_STORAGE)
@@ -26,4 +28,4 @@ class GoBackNProtocol(Protocol):
         #    message_recv = self.receive(client_socket)
         #    file_manager.write_file_bytes(message_recv.get_payload())
         file_manager.close()
-        print("Receiving file using Go-Back-N Protocol")
+        logging.debug(f"{MSG_RECEIVED_USING_GO_BACK_N}")
