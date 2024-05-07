@@ -55,7 +55,7 @@ class Protocol:
 
     def send_initiate(self, socket, host, port):
         logging.info(f"[LOG] Sending INITIATE")
-        message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
+        message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, b'')
         self.send_message(socket, host, port, message)
         return
     
@@ -72,6 +72,6 @@ class Protocol:
 
     def send_senack(self, socket, host, port):
         print(f"[LOG] Sending SENACK")
-        message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
+        message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, b'')
         self.send_message(socket, host, port, message)
         return
