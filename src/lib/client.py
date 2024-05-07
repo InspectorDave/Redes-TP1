@@ -22,14 +22,14 @@ class Client:
         self.server_host, self.server_port = new_server_address
         return
 
-    def upload(self, file_path):
+    def upload(self, file_path, filename):
 
         thread_manager = Condition()
         communication_queue = []
         thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self.socket, thread_manager, communication_queue))
         thread_receiver.start()
     
-        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(file_path, self.socket, self.server_host, self.server_port, thread_manager, communication_queue))
+        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(file_path, filename, self.socket, self.server_host, self.server_port, thread_manager, communication_queue))
         thread_sender.start()
         return
     
@@ -38,5 +38,6 @@ class Client:
         return complete_file
     
     def close_socket():
+        socket.shutdown(SHUT_RDWR)
         socket.close()
         return
