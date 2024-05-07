@@ -1,5 +1,7 @@
 import argparse
-from lib.constants import DEFAULT_HOST, DEFAULT_PORT, DEFAULT_SERVER_STORAGE, DEFAULT_UPLOAD_FILE_NAME, DEFAULT_UPLOAD_FILE_PATH
+from lib.constants import *
+import os
+
 
 def parse_server_arguments():
     parser = argparse.ArgumentParser(prog='start-server.py', description='<command description>')
@@ -39,9 +41,13 @@ def parse_server_arguments():
                         help='storage dir path')
     
     args = parser.parse_args()
-    if args.verbose:
-        print(args)
+    _verify_server_arguments(args)
     return args
+
+def _verify_server_arguments(args):
+    if not os.path.exists(args.storage):
+        raise FileNotFoundError(f"Directory '{args.storage}' does not exist.")
+    return
 
 
 def parse_upload_arguments():
@@ -66,13 +72,20 @@ def parse_upload_arguments():
                         '--protocol',
                         action='store',
                         type = str,
-                        help='protocol to use: s= StopAndWait; g=GoBackN',
+                        help='protocol to use: s=StopAndWait or g=GoBackN',
                         default='s')
     
     args = parser.parse_args()
-    if args.verbose:
-        print(args)
+    _verify_upload_arguments(args)
     return args
+
+def _verify_upload_arguments(args):
+    full_name = os.path.join(args.src, args.name)
+    if not os.path.exists(full_name):
+        raise FileNotFoundError(f"Directory '{full_name}' does not exist.")
+    if args.protocol != 's' and args.protocol != 'g':
+        raise Exception(f"Incorrect protocol. Try using 's' for Stop And Wait or 'g' for Go Back N")
+    return
 
 
 def parse_download_arguments():
@@ -81,6 +94,7 @@ def parse_download_arguments():
     
     parser.add_argument('-d',
                         '--dst',
+                        default = DEFAULT_DOWNLOAD_DST,
                         metavar = 'FILEPATH',
                         action='store',
                         type=str,
@@ -101,10 +115,15 @@ def parse_download_arguments():
                         default='s')
     
     args = parser.parse_args()
-    if args.verbose:
-        print(args)
+    _verify_download_arguments(args)
     return args
 
+def _verify_download_arguments(args):
+    if not os.path.exists(args.dst):
+        raise FileNotFoundError(f"Directory '{args.dst}' does not exist.")
+    if args.protocol != 's' and args.protocol != 'g':
+        raise Exception(f"Incorrect protocol. Try using 's' for Stop And Wait or 'g' for Go Back N")
+    return
 
 
 
