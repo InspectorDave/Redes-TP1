@@ -85,7 +85,7 @@ def sendInack (dedicatedClientSocket, clientAddress):
 
     print(f"[LOG] Sending inack...")
 
-    message = Message(Message.INACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, 0, b'')
+    message = Message(Message.INACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, b'')
     message_encoded = message.encode()
 
     dedicatedClientSocket.sendto(message_encoded, clientAddress)

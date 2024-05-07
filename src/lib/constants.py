@@ -11,7 +11,7 @@ DEFAULT_UPLOAD_FILE_NAME = 'test_file_2.txt'
 
 
 BUFFER_SIZE = 1024 # Tamanio del mensaje (Debe ser mayor que el header)
-HEADER_SIZE = 15 # Modificar si se agregan campos al header en clase Message
+HEADER_SIZE = 11 # Modificar si se agregan campos al header en clase Message
 PAYLOAD_SIZE = (BUFFER_SIZE-HEADER_SIZE) # Tamanio de los datos
 
 UPLOAD: ctypes.c_int8 = 0
