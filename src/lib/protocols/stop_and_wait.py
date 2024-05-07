@@ -51,7 +51,7 @@ class StopAndWaitProtocol(Protocol):
         while True:
             try:
                 message, clientAddress = socket.recvfrom(BUFFER_SIZE)
-            except TimeoutError:
+            except:
                 if stop_thread.is_set():
                     break
                 self.wake_up_threads(thread_manager)
