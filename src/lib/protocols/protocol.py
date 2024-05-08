@@ -45,7 +45,7 @@ class Protocol:
     def receive_ack(self):
         return
     
-    def perform_client_side_handshake(self, client, filename):
+    def perform_client_side_handshake(self, client):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
         client.reset_timer()
 
@@ -63,7 +63,7 @@ class Protocol:
             if verify_inack(decoded_message, client.transfer_type, client.protocol.CODE):
                 break
 
-        self.send_established(client.socket, downloader_address[0], downloader_address[1], filename)
+        self.send_established(client.socket, downloader_address[0], downloader_address[1], client.file_name)
 
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         client.keep_alive_timer.cancel()

@@ -23,7 +23,7 @@ class Client:
 
     def start(self):
         self.socket.settimeout(TIME_OUT)
-        new_server_address = self.protocol.perform_client_side_handshake(self, self.file_name)
+        new_server_address = self.protocol.perform_client_side_handshake(self)
         self.server_host, self.server_port = new_server_address
         return
 
