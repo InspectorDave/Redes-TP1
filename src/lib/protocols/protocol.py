@@ -48,17 +48,15 @@ class Protocol:
     def perform_client_side_handshake(self, client):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
 
-        protocol = Protocol.STOP_AND_WAIT # Eventualmente esto se recibe como parámetro
-
         while True:
-            message = Initiate(client.transfer_type, protocol)
+            message = Initiate(client.transfer_type, client.protocol.CODE)
             self.send_initiate(client.socket, client.server_host, client.server_port, message)
 
             try:
                 decoded_message, downloader_address = self.decode_received_message(client.socket)
             except TimeoutError:
                 continue
-            if verify_inack(decoded_message, client.transfer_type, protocol):
+            if verify_inack(decoded_message, client.transfer_type, client.protocol.CODE):
                 break
 
         self.send_established(client.socket, downloader_address[0], downloader_address[1])

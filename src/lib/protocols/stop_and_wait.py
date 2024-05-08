@@ -8,6 +8,7 @@ from lib.message import Message
 from lib.message import Decoder
 
 class StopAndWaitProtocol(Protocol):
+    CODE = 0
 
     def uploader_sender_logic(self, file_path, filename, socket:socket.socket, host, port, thread_manager:Condition, communication_queue, stop_thread):
         logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
