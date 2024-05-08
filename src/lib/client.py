@@ -1,15 +1,15 @@
 from socket import *
-from lib.constants import BUFFER_SIZE
 from lib.message import *
-from lib.protocols.protocol import *
-from lib.protocols.stop_and_wait import *
-from lib.protocols.go_back_n import *
+from lib.logging_msg import *
+from lib.constants import *
+from threading import *
+import logging
 
 class Connection:
     def __init__(self, destination_address, transfer_type, protocol, file_name):
         self.destination_host = destination_address[0]
         self.destination_port = destination_address[1]
-        self.socket = socket.socket(AF_INET, SOCK_DGRAM)
+        self.socket = socket(AF_INET, SOCK_DGRAM)
         self.file_name = file_name
         self.protocol = protocol
         self.transfer_type = transfer_type
@@ -37,8 +37,8 @@ class Connection:
 class Client(Connection):
     def start(self):
         self.socket.settimeout(TIME_OUT)
-        new_server_address = self.protocol.perform_client_side_handshake(self)
-        self.server_host, self.server_port = new_server_address
+        server_address = self.protocol.perform_client_side_handshake(self)
+        self.server_host, self.server_port = server_address
         return
 
     def upload(self, file_path, filename):

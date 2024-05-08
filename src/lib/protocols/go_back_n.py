@@ -20,7 +20,7 @@ class GoBackNProtocol(Protocol):
         file_manager.close()
         logging.debug(f"{MSG_SENT_USING_GO_BACK_N}")
 
-    def receive_file(self,client_socket:socket.socket):
+    def receive_file(self,client_socket:socket):
         file_manager = FileManager(FILE_MODE_WRITE, DEFAULT_SERVER_STORAGE)
         file_manager.open_to_write(DEFAULT_SERVER_STORAGE)
         #while (not conection_finalized):

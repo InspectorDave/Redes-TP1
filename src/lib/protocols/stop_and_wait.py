@@ -1,11 +1,13 @@
-from lib.protocols.protocol import *
 import random
 from threading import *
 import logging
-import time
+from socket import *
 
-from lib.message import Message
-from lib.message import Decoder
+from lib.protocols.protocol import Protocol
+from lib.file_manager import FileManager
+from lib.logging_msg import *
+from lib.constants import *
+from lib.message import Send, Senack
 
 class StopAndWaitProtocol(Protocol):
     CODE = 0
@@ -77,7 +79,7 @@ class StopAndWaitProtocol(Protocol):
 
         logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
 
-    def downloader_sender_logic(self, socket:socket.socket, host, port, thread_manager:Condition, communication_queue:list):
+    def downloader_sender_logic(self, socket:socket, host, port, thread_manager:Condition, communication_queue:list):
         thread_manager.acquire()
 
         while True:
@@ -86,7 +88,10 @@ class StopAndWaitProtocol(Protocol):
             self.send_message(socket, host, port, message)
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}")
 
-    def downloader_receiver_logic(self,socket:socket.socket, thread_manager, communication_queue, storage_path, file_name):
+    def downloader_receiver_logic(self,socket:socket, thread_manager, communication_queue, storage_path, file_name):
+
+        logging.info(f"Downloader receiver logic socket: {socket}")
+
         last_sequence_number = 0
         ack_number = 0
         logging.debug(f"{MSG_STORAGE_PATH} {storage_path}")

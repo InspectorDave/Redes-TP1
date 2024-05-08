@@ -1,6 +1,6 @@
-from lib.protocols.protocol import Protocol
 from lib.protocols.stop_and_wait import StopAndWaitProtocol
 from lib.protocols.go_back_n import GoBackNProtocol
+from lib.protocols.protocol import Protocol
 
 class ProtocolFactory:
     @staticmethod
