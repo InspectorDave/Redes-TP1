@@ -60,7 +60,7 @@ class Server:
         dedicatedClientSocket = socket(AF_INET, SOCK_DGRAM)
         dedicatedClientSocket.bind((self.host,0))
 
-        sendInack(dedicatedClientSocket, clientAddress)
+        sendInack(dedicatedClientSocket, clientAddress, message_initiate.transfer_type, message_initiate.protocol_type)
 
         message, clientAddress = Protocol.decode_received_message(dedicatedClientSocket)
 
@@ -80,11 +80,11 @@ class Server:
         thread_sender.start()
         return
 
-def sendInack (dedicatedClientSocket, clientAddress):
+def sendInack (dedicatedClientSocket, clientAddress, transfer_type, protocol_type):
 
     logging.debug(f"{MSG_SENDING_INACK}")
 
-    message = Inack(Protocol.UPLOAD, Protocol.STOP_AND_WAIT)
+    message = Inack(transfer_type, protocol_type)
     message_encoded = message.encode()
 
     dedicatedClientSocket.sendto(message_encoded, clientAddress)

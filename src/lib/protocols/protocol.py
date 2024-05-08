@@ -67,20 +67,9 @@ class Protocol:
         return downloader_address
 
     def send_initiate(self, socket, host, port, message):
-        logging.info(f"[LOG] Sending INITIATE")
+        logging.debug(f"{MSG_SENDING_INITIATE}")
         self.send_message(socket, host, port, message)
         return
-    
-    def receive_inack(self, socket, host, port):
-        message_decoded, server_address = self.receive(socket)
-
-        if message_decoded.message_type != Message.INACK:
-            logging.debug(f"{MSG_IS_NOT_INACK}")
-            return
-
-        logging.debug(f"{MSG_RECEIVED_INACK}")
-
-        return server_address
 
     def send_established(self, socket, host, port, filename):
         logging.info(f"{MSG_SENDING_ESTABLISHED}")

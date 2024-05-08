@@ -11,12 +11,14 @@ class Client:
         self.server_port = server_port
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
         self.file_name = args.name
-        if (args.protocol == 's'):
+        self.transfer_type = transfer_type
+        if (args.protocol == STOP_AND_WAIT):
             self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
-        elif (args.protocol == 'g'):
+        elif (args.protocol == GO_BACK_N):
             self.protocol = GoBackNProtocol()
         else:
-            logging.error(f"Error al crear el cliente")
+            logging.error(f"{MSG_CLIENT_CREATION_ERROR}")
+            raise ValueError(f"{MSG_CLIENT_CREATION_ERROR}")
         self.transfer_type = transfer_type
         self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self, ))
         self.end_process = Event()
