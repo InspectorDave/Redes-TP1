@@ -92,3 +92,27 @@ def sendInack (dedicatedClientSocket, clientAddress):
     logging.debug(f"{MSG_SENT_INACK}")
 
     return
+
+# class Connection:
+#     def __init__(self, destination_address, protocol, transfer_type):
+#         self.destination_host = destination_address[0]
+#         self.destination_port = destination_address[1]
+#         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
+#         self.file_name = "received_file"
+#         if (protocol == 's'):
+#             self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
+#         elif (protocol == 'g'):
+#             self.protocol = GoBackNProtocol()
+#         else:
+#             logging.error(f"Error al crear el cliente")
+#         self.transfer_type = transfer_type
+#         self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
+#         self.end_connection = Event()
+#         self.thread_manager = Condition()
+
+
+#     def end_connection(self):
+#         logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
+#         self.keep_alive_timer.cancel()
+#         self.end_process.set()
+#         return
