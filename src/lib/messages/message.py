@@ -2,11 +2,6 @@ from lib.constants import *
 import struct
 import random
 
-# El header (compuesto por packet_number y ack_number) debe ser
-# menor que el HEADER_SIZE
-
-# IMPORTANTE: Al agregar un campo al header 
-# hay que modificar la funcion encode() y decode() y HEADER_SIZE
 class Message:
     FIXED_HEADER_SIZE = 1
 
@@ -16,55 +11,12 @@ class Message:
     SENACK = 3
     ESTABLISHED = 4
 
-    # def __init__(self, message_type, transfer_type, protocol_type, packet_number, ack_number, payload):
-    #     self.message_type = message_type
-    #     self.transfer_type = transfer_type
-    #     self.protocol_type = protocol_type
-    #     self.packet_number = packet_number
-    #     self.ack_number = ack_number
-    #     self.payload = payload
-    #     return
-    
-    # El primer parametro de struct.pack es el formato. Cada I representa
-    # un uint32, cada B un uint8, y '!' es el formato BIG ENDIAN
-    # def encode(self):
-    #     header = struct.pack("!BBBII", self.message_type, 
-    #                         self.transfer_type,
-    #                         self.protocol_type,
-    #                         self.packet_number,
-    #                         self.ack_number)
-    #     return header + self.payload
-    
-    # @staticmethod
-    # def decode(data):
-    #     header_data = data[:HEADER_SIZE]
-    #     payload = data[HEADER_SIZE:]
-    #     message_type, transfer_type, protocol_type, packet_number, \
-    #         ack_number = struct.unpack("!BBBII", header_data)
-    #     return Message(message_type, transfer_type, protocol_type, packet_number, ack_number, payload)
-    
-
-
-    # def get_payload(self):
-    #     return self.payload
-
 class Decoder:
     @staticmethod
     def decode_fixed_header(data):
-        message_type = struct.unpack("!B", data)
-        return message_type[0]
-
-    @staticmethod
-    def size_without_fixed_header(message_type):
-        if message_type == Message.INITIATE:
-            return Initiate.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE
-        elif message_type == Message.INACK:
-            return Inack.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE
-        elif message_type == Message.SEND:
-            return Send.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE
-        elif message_type == Message.SENACK:
-            return Senack.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE
-
+        message_type = struct.unpack("!B", data)[0]
+        return message_type
+    
     @staticmethod
     def decode_after_fixed_header(message_type, data):
         if message_type == Message.INITIATE:

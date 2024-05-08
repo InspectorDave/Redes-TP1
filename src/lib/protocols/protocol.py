@@ -86,7 +86,7 @@ class Protocol:
         message_type = Decoder.decode_fixed_header(fixed_header)
         rest_of_message = recv_buffer
         decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
-        
+
         logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {decoded_message.message_type}")
         logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
 
