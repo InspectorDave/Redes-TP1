@@ -6,16 +6,27 @@ from lib.protocols.stop_and_wait import *
 from lib.protocols.go_back_n import *
 
 class Connection:
-    def __init__(self, destination_address, transfer_type, protocol):
+    def __init__(self, destination_address, transfer_type, protocol, file_name):
         self.destination_host = destination_address[0]
         self.destination_port = destination_address[1]
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
-        self.file_name = "received_file"
+        self.file_name = file_name
         self.protocol = protocol
         self.transfer_type = transfer_type
         self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
         self.end_connection_flag = Event()
         self.thread_manager = Condition()
+
+    def close_socket():
+        socket.shutdown(SHUT_RDWR)
+        socket.close()
+        return
+    
+    def reset_timer(self):
+        self.keep_alive_timer.cancel()
+        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
+        self.keep_alive_timer.start()
+        return
 
     def end_connection(self):
         logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
@@ -44,14 +55,3 @@ class Client(Connection):
     def download(self):
         complete_file = self.protocol.receive_file(socket)
         return complete_file
-    
-    def close_socket():
-        socket.shutdown(SHUT_RDWR)
-        socket.close()
-        return
-    
-    def reset_timer(self):
-        self.keep_alive_timer.cancel()
-        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
-        self.keep_alive_timer.start()
-        return

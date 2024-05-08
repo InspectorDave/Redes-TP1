@@ -11,7 +11,7 @@ if __name__ == "__main__":
     args = parse_upload_arguments()
     prepare_logging(args)
     protocol = ProtocolFactory.create_from_arguments(args.protocol)
-    client = Client((args.host, args.port), Protocol.UPLOAD, protocol)
+    client = Client((args.host, args.port), Protocol.UPLOAD, protocol, args.name)
     client.start()
     client.upload(args.src, args.name)
     
