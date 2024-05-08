@@ -47,25 +47,27 @@ class Protocol:
     
     def perform_client_side_handshake(self, client, filename):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
+        client.reset_timer()
 
         while True:
             message = Initiate(client.transfer_type, client.protocol.CODE)
             self.send_initiate(client.socket, client.server_host, client.server_port, message)
-            client.reset_timer()
-            client.keep_alive_timer.cancel()
 
             try:
                 decoded_message, downloader_address = self.decode_received_message(client.socket)
             except TimeoutError:
+                if client.end_process.is_set():
+                    exit()
                 continue
+            client.reset_timer()
             if verify_inack(decoded_message, client.transfer_type, client.protocol.CODE):
                 break
 
         self.send_established(client.socket, downloader_address[0], downloader_address[1], filename)
 
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
+        client.keep_alive_timer.cancel()
         return downloader_address
-
 
     def send_initiate(self, socket, host, port, message):
         logging.info(f"[LOG] Sending INITIATE")

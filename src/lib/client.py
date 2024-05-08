@@ -18,7 +18,7 @@ class Client:
         else:
             logging.error(f"Error al crear el cliente")
         self.transfer_type = transfer_type
-        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_process)
+        self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self, ))
         self.end_process = Event()
 
     def start(self):
@@ -47,15 +47,14 @@ class Client:
         socket.shutdown(SHUT_RDWR)
         socket.close()
         return
-
-    def end_process(self):
-        logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
-        self.keep_alive_timer.cancel()
-        self.end_process.set()
-        return
     
     def reset_timer(self):
         self.keep_alive_timer.cancel()
-        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_process)
+        self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self,))
         self.keep_alive_timer.start()
         return
+    
+def end_process(client):
+    logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
+    client.end_process.set()
+    return
