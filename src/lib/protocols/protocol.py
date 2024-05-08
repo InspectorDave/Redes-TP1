@@ -47,15 +47,29 @@ class Protocol:
     
     def perform_client_side_handshake(self, socket, host, port):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
-        self.send_initiate(socket, host, port)
-        comm_server_address = self.receive_inack(socket, host, port)
-        self.send_established(socket, comm_server_address[0], comm_server_address[1])
-        logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
-        return comm_server_address
 
-    def send_initiate(self, socket, host, port):
+        transfer_type = Protocol.UPLOAD   # Eventualmente esto se recibe como parámetro
+        protocol = Protocol.STOP_AND_WAIT # Eventualmente esto se recibe como parámetro
+
+        while True:
+            message = Initiate(transfer_type, protocol)
+            self.send_initiate(socket, host, port, message)
+
+            try:
+                decoded_message, downloader_address = self.decode_received_message(socket)
+            except TimeoutError:
+                continue
+            if verify_inack(decoded_message, transfer_type, protocol):
+                break
+
+        self.send_established(socket, downloader_address[0], downloader_address[1])
+
+        logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
+        return downloader_address
+
+
+    def send_initiate(self, socket, host, port, message):
         logging.info(f"[LOG] Sending INITIATE")
-        message = Initiate(Protocol.UPLOAD, Protocol.STOP_AND_WAIT)
         self.send_message(socket, host, port, message)
         return
     
@@ -89,3 +103,16 @@ class Protocol:
         logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
 
         return decoded_message, clientAddress
+
+def verify_inack(message, transfer_type, protocol):
+    if message.message_type != Message.INACK:
+        logging.debug(f"{MSG_IS_NOT_INACK}")
+        return False
+    if message.transfer_type != transfer_type:
+        logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
+        return False
+    if message.protocol_type != protocol:
+        logging.debug(f"{MSG_PROTOCOL_NOT_MATCH}")
+        return False
+    logging.debug(f"{MSG_RECEIVED_INACK}")
+    return True
