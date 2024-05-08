@@ -14,6 +14,8 @@ BUFFER_SIZE = 1024 # Tamanio del mensaje (Debe ser mayor que el header)
 HEADER_SIZE = 11 # Modificar si se agregan campos al header en clase Message
 PAYLOAD_SIZE = (BUFFER_SIZE-HEADER_SIZE) # Tamanio de los datos
 
+RECV_BUFFER_SIZE = 8192
+
 UPLOAD: ctypes.c_int8 = 0
 DOWNLOAD: ctypes.c_int8 = 1
 
