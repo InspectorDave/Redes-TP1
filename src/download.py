@@ -6,7 +6,7 @@ from lib.log import prepare_logging
 if __name__ == "__main__":
     args = parse_download_arguments()
     prepare_logging(args)
-    client = Client(args.host, args.port, args)
+    client = Client(args.host, args.port, DOWNLOAD, args)
     client.start()
     #client.download()
     

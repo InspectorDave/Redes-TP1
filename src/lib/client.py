@@ -6,21 +6,25 @@ from lib.protocols.stop_and_wait import *
 from lib.protocols.go_back_n import *
 
 class Client:
-    def __init__(self, server_host, server_port, args):
+    def __init__(self, server_host, server_port, transfer_type, args):
         self.server_host = server_host
         self.server_port = server_port
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
         self.file_name = args.name
-        if (args.protocol == 's'):
+        self.transfer_type = transfer_type
+        if (args.protocol == STOP_AND_WAIT):
             self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
-        elif (args.protocol == 'g'):
+            self.protocol_n = STOP_AND_WAIT_N
+        elif (args.protocol == GO_BACK_N):
             self.protocol = GoBackNProtocol()
+            self.protocol_n = GO_BACK_N_N
         else:
-            logging.error(f"Error al crear el cliente")
+            logging.error(f"{MSG_CLIENT_CREATION_ERROR}")
+            raise ValueError(f"{MSG_CLIENT_CREATION_ERROR}")
 
     def start(self):
         self.socket.settimeout(TIME_OUT)
-        new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port, self.file_name)
+        new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port, self.file_name, self.transfer_type, self.protocol_n)
         self.server_host, self.server_port = new_server_address
         return
 

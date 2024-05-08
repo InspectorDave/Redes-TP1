@@ -45,21 +45,18 @@ class Protocol:
     def receive_ack(self):
         return
     
-    def perform_client_side_handshake(self, socket, host, port, filename):
+    def perform_client_side_handshake(self, socket, host, port, filename, transfer_type, protocol_type):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
 
-        transfer_type = Protocol.UPLOAD   # Eventualmente esto se recibe como parámetro
-        protocol = Protocol.STOP_AND_WAIT # Eventualmente esto se recibe como parámetro
-
         while True:
-            message = Initiate(transfer_type, protocol)
+            message = Initiate(transfer_type, protocol_type)
             self.send_initiate(socket, host, port, message)
 
             try:
                 decoded_message, downloader_address = self.decode_received_message(socket)
             except TimeoutError:
                 continue
-            if verify_inack(decoded_message, transfer_type, protocol):
+            if verify_inack(decoded_message, transfer_type, protocol_type):
                 break
 
         self.send_established(socket, downloader_address[0], downloader_address[1], filename)
@@ -69,20 +66,20 @@ class Protocol:
 
 
     def send_initiate(self, socket, host, port, message):
-        logging.info(f"[LOG] Sending INITIATE")
+        logging.debug(f"{MSG_SENDING_INITIATE}")
         self.send_message(socket, host, port, message)
         return
     
-    def receive_inack(self, socket, host, port):
-        message_decoded, server_address = self.receive(socket)
+    # def receive_inack(self, socket, host, port):
+    #     message_decoded, server_address = self.receive(socket)
 
-        if message_decoded.message_type != Message.INACK:
-            logging.debug(f"{MSG_IS_NOT_INACK}")
-            return
+    #     if message_decoded.message_type != Message.INACK:
+    #         logging.debug(f"{MSG_IS_NOT_INACK}")
+    #         return
 
-        logging.debug(f"{MSG_RECEIVED_INACK}")
+    #     logging.debug(f"{MSG_RECEIVED_INACK} {str(message_decoded.transfer_type)} {str(message_decoded.protocol_type)}")
 
-        return server_address
+    #     return server_address
 
     def send_established(self, socket, host, port, filename):
         logging.info(f"{MSG_SENDING_ESTABLISHED}")
