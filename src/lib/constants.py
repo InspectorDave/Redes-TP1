@@ -21,3 +21,5 @@ DOWNLOAD: ctypes.c_int8 = 1
 
 FILE_MODE_WRITE = 'w'
 FILE_MODE_READ = 'r'
+
+KEEP_ALIVE = 10
