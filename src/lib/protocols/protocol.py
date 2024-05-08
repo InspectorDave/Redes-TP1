@@ -5,8 +5,6 @@ from lib.file_manager import *
 import logging
 from lib.logging_msg import *
 
-TIME_OUT = 2
-
 class Protocol:
 
     UPLOAD = 0
@@ -66,7 +64,6 @@ class Protocol:
         self.send_established(client.socket, downloader_address[0], downloader_address[1], client.file_name)
 
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
-        client.keep_alive_timer.cancel()
         return downloader_address
 
     def send_initiate(self, socket, host, port, message):

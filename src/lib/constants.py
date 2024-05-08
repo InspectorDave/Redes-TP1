@@ -23,4 +23,5 @@ DOWNLOAD: ctypes.c_int8 = 1
 FILE_MODE_WRITE = 'w'
 FILE_MODE_READ = 'r'
 
-KEEP_ALIVE = 10
+TIME_OUT = 1
+KEEP_ALIVE = 4
