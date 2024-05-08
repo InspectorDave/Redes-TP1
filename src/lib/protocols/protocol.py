@@ -51,6 +51,8 @@ class Protocol:
         while True:
             message = Initiate(client.transfer_type, client.protocol.CODE)
             self.send_initiate(client.socket, client.server_host, client.server_port, message)
+            client.reset_timer()
+            client.keep_alive_timer.cancel()
 
             try:
                 decoded_message, downloader_address = self.decode_received_message(client.socket)

@@ -48,6 +48,7 @@ class Client:
         return
 
     def end_process(self):
+        logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
         self.keep_alive_timer.cancel()
         self.end_process.set()
         return
