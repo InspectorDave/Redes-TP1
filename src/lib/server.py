@@ -1,7 +1,9 @@
 from socket import *
 from threading import *
 from lib.constants import *
+
 from lib.message import *
+
 from lib.protocols.protocol import Protocol
 from lib.protocols.stop_and_wait import StopAndWaitProtocol
 from lib.protocols.go_back_n import GoBackNProtocol
@@ -24,16 +26,14 @@ class Server:
         logging.info(f"{MSG_SERVER_READY_TO_RECEIVE}")
 
         while True:
-            message, clientAddress = serverSocket.recvfrom(BUFFER_SIZE)
+
+            message, clientAddress = Protocol.decode_received_message(serverSocket)
             self.__process_new_connetion(message, clientAddress)
 
     def __process_new_connetion(self, message, clientAddress):
         logging.info(f"{MSG_PROCESSING_NEW_CONNECTION}")
-        
-        message_decoded = Message.decode(message)
 
-        if message_decoded.message_type != Message.INITIATE:
-            # El mensaje no es una nueva conexión
+        if message.message_type != Message.INITIATE:
             logging.debug(f"{MSG_IS_NOT_INITIATE}")
             return
         if clientAddress in self.clients:
@@ -43,8 +43,7 @@ class Server:
 
         logging.debug(f"{MSG_RECEIVED_INITIATE}")
 
-        # Creo un nuevo thread para el nuevo cliente
-        new_thread = Thread(target=self.__process_existing_connection, args=(clientAddress,))
+        new_thread = Thread(target=self.__process_existing_connection, args=(clientAddress, message))
         new_thread.start()
         self.clients.append(clientAddress)
 
@@ -52,25 +51,24 @@ class Server:
 
         return
     
-    def __process_existing_connection(self, clientAddress):
+    def __process_existing_connection(self, clientAddress, message_initiate):
 
         logging.debug(f"{MSG_PROCESSING_EXISTING_CONNECTION}")
+
+        session_protocol = ProtocolFactory.create(message_initiate.protocol_type)
 
         dedicatedClientSocket = socket(AF_INET, SOCK_DGRAM)
         dedicatedClientSocket.bind((self.host,0))
 
         sendInack(dedicatedClientSocket, clientAddress)
 
-        message, clientAddress = dedicatedClientSocket.recvfrom(BUFFER_SIZE)
+        message, clientAddress = Protocol.decode_received_message(dedicatedClientSocket)
 
-        decoded_message = Message.decode(message)
-        logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {decoded_message.message_type}")
+        logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {message.message_type}")
 
-        if decoded_message.message_type != Message.SENACK:
-            logging.debug(f"{MSG_IS_NOT_SENACK}")
+        if message.message_type != Message.ESTABLISHED:
+            logging.debug(f"{MSG_IS_NOT_ESTABLISHED}")
             return
-
-        session_protocol = ProtocolFactory.create(decoded_message.protocol_type)
 
         thread_manager = Condition()
         communication_queue = []
@@ -86,7 +84,7 @@ def sendInack (dedicatedClientSocket, clientAddress):
 
     logging.debug(f"{MSG_SENDING_INACK}")
 
-    message = Message(Message.INACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, b'')
+    message = Inack(Protocol.UPLOAD, Protocol.STOP_AND_WAIT)
     message_encoded = message.encode()
 
     dedicatedClientSocket.sendto(message_encoded, clientAddress)

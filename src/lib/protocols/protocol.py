@@ -35,9 +35,9 @@ class Protocol:
 
     # El receive solo se ocupa de recibir un paquete y decodificarlo
     def receive(self, client_socket:socket.socket):
-        message_received, serverAddress = client_socket.recvfrom(BUFFER_SIZE)
-        msg_decoded = Message.decode(message_received)
-        return msg_decoded, serverAddress
+
+        message, serverAddress = Protocol.decode_received_message(client_socket)
+        return message, serverAddress
     
     def send_ack(self):
         return
@@ -49,13 +49,13 @@ class Protocol:
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
         self.send_initiate(socket, host, port)
         comm_server_address = self.receive_inack(socket, host, port)
-        self.send_senack(socket, comm_server_address[0], comm_server_address[1])
+        self.send_established(socket, comm_server_address[0], comm_server_address[1])
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return comm_server_address
 
     def send_initiate(self, socket, host, port):
         logging.info(f"[LOG] Sending INITIATE")
-        message = Message(Message.INITIATE, Protocol.UPLOAD, Protocol.STOP_AND_WAIT, 0, 0, b'')
+        message = Initiate(Protocol.UPLOAD, Protocol.STOP_AND_WAIT)
         self.send_message(socket, host, port, message)
         return
     
@@ -70,8 +70,22 @@ class Protocol:
 
         return server_address
 
-    def send_senack(self, socket, host, port):
-        print(f"[LOG] Sending SENACK")
-        message = Message(Message.SENACK, Protocol.UPLOAD,Protocol.STOP_AND_WAIT, 0, 0, b'')
+    def send_established(self, socket, host, port):
+        logging.info(f"{MSG_SENDING_ESTABLISHED}")
+        message = Established()
         self.send_message(socket, host, port, message)
         return
+
+    @staticmethod
+    def decode_received_message(socket:socket.socket):
+        recv_buffer, clientAddress = socket.recvfrom(RECV_BUFFER_SIZE)
+        fixed_header = recv_buffer[:Message.FIXED_HEADER_SIZE]
+        recv_buffer = recv_buffer[Message.FIXED_HEADER_SIZE:]
+        message_type = Decoder.decode_fixed_header(fixed_header)
+        rest_of_message = recv_buffer
+        decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
+
+        logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {decoded_message.message_type}")
+        logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
+
+        return decoded_message, clientAddress
