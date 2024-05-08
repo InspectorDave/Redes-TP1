@@ -32,7 +32,7 @@ class StopAndWaitProtocol(Protocol):
                 logging.debug(f"{MSG_NO_ACK_RECEIVED}")
                 continue
 
-            if received_message.ack_number == sequence_number + 1:
+            if received_message.ack_number == sequence_number:
                 sequence_number += 1
                 file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
@@ -83,7 +83,7 @@ class StopAndWaitProtocol(Protocol):
                     file_manager.write_file_bytes(decoded_message.payload)
                     logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path+file_name}")
                 last_sequence_number = decoded_message.sequence_number
-                message_ack = Senack(decoded_message.sequence_number + 1)
+                message_ack = Senack(decoded_message.sequence_number)
                 communication_queue.append(message_ack)
                 thread_manager.notify()
                 thread_manager.release()
