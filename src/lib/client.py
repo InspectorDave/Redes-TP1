@@ -14,10 +14,8 @@ class Client:
         self.transfer_type = transfer_type
         if (args.protocol == STOP_AND_WAIT):
             self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
-            self.protocol_n = STOP_AND_WAIT_N
         elif (args.protocol == GO_BACK_N):
             self.protocol = GoBackNProtocol()
-            self.protocol_n = GO_BACK_N_N
         else:
             logging.error(f"{MSG_CLIENT_CREATION_ERROR}")
             raise ValueError(f"{MSG_CLIENT_CREATION_ERROR}")
