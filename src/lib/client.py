@@ -18,7 +18,7 @@ class Client:
         else:
             logging.error(f"Error al crear el cliente")
         self.transfer_type = transfer_type
-        self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self, ))
+        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_process)
         self.end_process = Event()
         self.thread_manager = Condition()
 
@@ -32,10 +32,10 @@ class Client:
         
         communication_queue = []
 
-        thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self, self.thread_manager, communication_queue))
+        thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self, communication_queue))
         thread_receiver.start()
     
-        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(self, file_path, filename, self.thread_manager, communication_queue))
+        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(self, file_path, filename, communication_queue))
         thread_sender.start()
         return
     
@@ -50,12 +50,12 @@ class Client:
     
     def reset_timer(self):
         self.keep_alive_timer.cancel()
-        self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self,))
+        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_process)
         self.keep_alive_timer.start()
         return
     
-def end_process(client):
-    logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
-    client.keep_alive_timer.cancel()
-    client.end_process.set()
-    return
+    def end_process(self):
+        logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
+        self.keep_alive_timer.cancel()
+        self.end_process.set()
+        return

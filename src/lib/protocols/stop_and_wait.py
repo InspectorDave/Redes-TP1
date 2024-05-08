@@ -10,8 +10,10 @@ from lib.message import Decoder
 class StopAndWaitProtocol(Protocol):
     CODE = 0
 
-    def uploader_sender_logic(self, connection, file_path, filename, thread_manager:Condition, communication_queue):
+    def uploader_sender_logic(self, connection, file_path, filename, communication_queue):
         logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
+        
+        thread_manager = connection.thread_manager
         thread_manager.acquire()
 
         sequence_number = random.randint(1, 1023)
@@ -50,7 +52,10 @@ class StopAndWaitProtocol(Protocol):
         thread_manager.release()
         return
 
-    def uploader_receiver_logic(self, connection, thread_manager:Condition, communication_queue):
+    def uploader_receiver_logic(self, connection, communication_queue):
+
+        thread_manager = connection.thread_manager
+
         thread_manager.acquire()
         thread_manager.wait()
         thread_manager.release()
