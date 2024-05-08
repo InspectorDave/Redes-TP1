@@ -5,8 +5,6 @@ from lib.file_manager import *
 import logging
 from lib.logging_msg import *
 
-TIME_OUT = 2
-
 class Protocol:
 
     UPLOAD = 0
@@ -45,25 +43,28 @@ class Protocol:
     def receive_ack(self):
         return
     
-    def perform_client_side_handshake(self, socket, host, port, filename, transfer_type, protocol_type):
+    def perform_client_side_handshake(self, client):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
+        client.reset_timer()
 
         while True:
-            message = Initiate(transfer_type, protocol_type)
-            self.send_initiate(socket, host, port, message)
+            message = Initiate(client.transfer_type, client.protocol.CODE)
+            self.send_initiate(client.socket, client.server_host, client.server_port, message)
 
             try:
-                decoded_message, downloader_address = self.decode_received_message(socket)
+                decoded_message, downloader_address = self.decode_received_message(client.socket)
             except TimeoutError:
+                if client.end_process.is_set():
+                    exit()
                 continue
-            if verify_inack(decoded_message, transfer_type, protocol_type):
+            client.reset_timer()
+            if verify_inack(decoded_message, client.transfer_type, client.protocol.CODE):
                 break
 
-        self.send_established(socket, downloader_address[0], downloader_address[1], filename)
+        self.send_established(client.socket, downloader_address[0], downloader_address[1], client.file_name)
 
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return downloader_address
-
 
     def send_initiate(self, socket, host, port, message):
         logging.debug(f"{MSG_SENDING_INITIATE}")
