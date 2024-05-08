@@ -30,7 +30,7 @@ class StopAndWaitProtocol(Protocol):
             thread_manager.notify()
             thread_manager.wait()
 
-            if connection.end_process.is_set():
+            if connection.end_connection_flag.is_set():
                 break
 
             try:
@@ -47,7 +47,7 @@ class StopAndWaitProtocol(Protocol):
 
         logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
-        connection.end_process.set()
+        connection.end_connection_flag.set()
         connection.keep_alive_timer.cancel()
         thread_manager.release()
         return
@@ -65,7 +65,7 @@ class StopAndWaitProtocol(Protocol):
                 decoded_message, downloader_address = self.decode_received_message(connection.socket)
             except TimeoutError:
                 self.wake_up_threads(thread_manager)
-                if connection.end_process.is_set():
+                if connection.end_connection_flag.is_set():
                     break
                 continue
 

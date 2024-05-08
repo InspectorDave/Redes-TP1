@@ -49,12 +49,12 @@ class Protocol:
 
         while True:
             message = Initiate(client.transfer_type, client.protocol.CODE)
-            self.send_initiate(client.socket, client.server_host, client.server_port, message)
+            self.send_initiate(client.socket, client.destination_host, client.destination_port, message)
 
             try:
                 decoded_message, downloader_address = self.decode_received_message(client.socket)
             except TimeoutError:
-                if client.end_process.is_set():
+                if client.end_connection_flag.is_set():
                     exit()
                 continue
             client.reset_timer()
