@@ -45,11 +45,11 @@ class Protocol:
     def receive_ack(self):
         return
     
-    def perform_client_side_handshake(self, socket, host, port):
+    def perform_client_side_handshake(self, socket, host, port, filename):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
         self.send_initiate(socket, host, port)
         comm_server_address = self.receive_inack(socket, host, port)
-        self.send_established(socket, comm_server_address[0], comm_server_address[1])
+        self.send_established(socket, comm_server_address[0], comm_server_address[1], filename)
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return comm_server_address
 
@@ -70,9 +70,10 @@ class Protocol:
 
         return server_address
 
-    def send_established(self, socket, host, port):
+    def send_established(self, socket, host, port, filename):
         logging.info(f"{MSG_SENDING_ESTABLISHED}")
-        message = Established()
+        logging.debug(f"{MSG_FILE_NAME} {filename}")
+        message = Established(filename)
         self.send_message(socket, host, port, message)
         return
 

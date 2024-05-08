@@ -10,6 +10,7 @@ class Client:
         self.server_host = server_host
         self.server_port = server_port
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
+        self.file_name = args.name
         if (args.protocol == 's'):
             self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
         elif (args.protocol == 'g'):
@@ -18,7 +19,7 @@ class Client:
             logging.error(f"Error al crear el cliente")
 
     def start(self):
-        new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port)
+        new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port, self.file_name)
         self.server_host, self.server_port = new_server_address
         return
 

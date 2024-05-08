@@ -102,6 +102,7 @@ def parse_download_arguments():
     
     parser.add_argument('-n',
                         '--name',
+                        default= DEFAULT_DOWNLOAD_FILE_NAME,
                         metavar= 'FILENAME',
                         action='store',
                         type=str,

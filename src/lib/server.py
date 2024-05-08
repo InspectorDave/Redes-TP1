@@ -69,6 +69,8 @@ class Server:
         if message.message_type != Message.ESTABLISHED:
             logging.debug(f"{MSG_IS_NOT_ESTABLISHED}")
             return
+        
+        logging.debug(f"{MSG_IS_ESTABLISHED} {message.filename}")
 
         thread_manager = Condition()
         communication_queue = []
