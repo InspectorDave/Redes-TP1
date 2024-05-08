@@ -11,13 +11,7 @@ class Connection:
         self.destination_port = destination_address[1]
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
         self.file_name = "received_file"
-        if (protocol == 's'):
-            self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
-        elif (protocol == 'g'):
-            self.protocol = GoBackNProtocol()
-        else:
-            logging.error(f"{ERR_INVALIDAD_PROTOCOL}")
-            exit()
+        self.protocol = protocol
         self.transfer_type = transfer_type
         self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
         self.end_connection_flag = Event()

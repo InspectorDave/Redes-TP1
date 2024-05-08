@@ -11,3 +11,11 @@ class ProtocolFactory:
                 session_protocol = GoBackNProtocol()
 
         return session_protocol
+
+    def create_from_arguments(protocol_name):
+        if (protocol_name == 's'):
+                session_protocol = StopAndWaitProtocol()
+        elif (protocol_name == 'g'):
+                session_protocol = GoBackNProtocol()
+
+        return session_protocol
