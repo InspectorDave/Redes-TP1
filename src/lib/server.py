@@ -75,7 +75,7 @@ class Server:
         thread_manager = Condition()
         communication_queue = []
 
-        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket, thread_manager, communication_queue, self.storage,))
+        thread_receiver = Thread(target=session_protocol.downloader_receiver_logic, args=(dedicatedClientSocket, thread_manager, communication_queue, self.storage, message.filename,))
         thread_receiver.start()
     
         thread_sender = Thread(target=session_protocol.downloader_sender_logic, args=(dedicatedClientSocket, clientAddress[0], clientAddress[1], thread_manager, communication_queue,))
