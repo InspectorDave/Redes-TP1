@@ -45,7 +45,7 @@ class Protocol:
     def receive_ack(self):
         return
     
-    def perform_client_side_handshake(self, socket, host, port):
+    def perform_client_side_handshake(self, client):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
 
         transfer_type = Protocol.UPLOAD   # Eventualmente esto se recibe como parámetro
@@ -53,16 +53,16 @@ class Protocol:
 
         while True:
             message = Initiate(transfer_type, protocol)
-            self.send_initiate(socket, host, port, message)
+            self.send_initiate(client.socket, client.server_host, client.server_port, message)
 
             try:
-                decoded_message, downloader_address = self.decode_received_message(socket)
+                decoded_message, downloader_address = self.decode_received_message(client.socket)
             except TimeoutError:
                 continue
             if verify_inack(decoded_message, transfer_type, protocol):
                 break
 
-        self.send_established(socket, downloader_address[0], downloader_address[1])
+        self.send_established(client.socket, downloader_address[0], downloader_address[1])
 
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return downloader_address

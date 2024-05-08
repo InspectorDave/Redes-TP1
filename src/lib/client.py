@@ -6,7 +6,7 @@ from lib.protocols.stop_and_wait import *
 from lib.protocols.go_back_n import *
 
 class Client:
-    def __init__(self, server_host, server_port, args):
+    def __init__(self, server_host, server_port, args, transfer_type):
         self.server_host = server_host
         self.server_port = server_port
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
@@ -16,10 +16,11 @@ class Client:
             self.protocol = GoBackNProtocol()
         else:
             logging.error(f"Error al crear el cliente")
+        self.transfer_type = transfer_type
 
     def start(self):
         self.socket.settimeout(TIME_OUT)
-        new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port)
+        new_server_address = self.protocol.perform_client_side_handshake(self)
         self.server_host, self.server_port = new_server_address
         return
 
