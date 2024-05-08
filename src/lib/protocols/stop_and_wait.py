@@ -20,6 +20,7 @@ class StopAndWaitProtocol(Protocol):
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         
         while file_chunk:
+
             message = Send(sequence_number, file_chunk)
             sent = self.send_message(connection.socket, connection.server_host, connection.server_port, message)
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
@@ -27,18 +28,25 @@ class StopAndWaitProtocol(Protocol):
             thread_manager.notify()
             thread_manager.wait()
 
+            if connection.end_process.is_set():
+                break
+
             try:
                 received_message = communication_queue.pop(0)
             except IndexError:
                 logging.debug(f"{MSG_NO_ACK_RECEIVED}")
                 continue
 
+            connection.reset_timer()
+
             if received_message.ack_number == sequence_number + 1:
                 sequence_number += 1
                 file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
+        logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
         connection.end_process.set()
+        connection.keep_alive_timer.cancel()
         thread_manager.release()
         return
 
@@ -51,9 +59,9 @@ class StopAndWaitProtocol(Protocol):
             try:
                 decoded_message, downloader_address = self.decode_received_message(connection.socket)
             except TimeoutError:
+                self.wake_up_threads(thread_manager)
                 if connection.end_process.is_set():
                     break
-                self.wake_up_threads(thread_manager)
                 continue
 
             thread_manager.acquire()
@@ -61,6 +69,8 @@ class StopAndWaitProtocol(Protocol):
             communication_queue.append(decoded_message)
             thread_manager.notify()
             thread_manager.release()
+
+        logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
 
     def downloader_sender_logic(self, socket:socket.socket, host, port, thread_manager:Condition, communication_queue:list):
         thread_manager.acquire()
