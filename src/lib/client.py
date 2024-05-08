@@ -19,14 +19,13 @@ class Client:
             logging.error(f"Error al crear el cliente")
 
     def start(self):
+        self.socket.settimeout(TIME_OUT)
         new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port, self.file_name)
         self.server_host, self.server_port = new_server_address
         return
 
     def upload(self, file_path, filename):
         
-        self.socket.settimeout(TIME_OUT)
-
         thread_manager = Condition()
         communication_queue = []
         stop_thread = Event()

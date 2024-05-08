@@ -64,8 +64,6 @@ class Server:
 
         message, clientAddress = Protocol.decode_received_message(dedicatedClientSocket)
 
-        logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {message.message_type}")
-
         if message.message_type != Message.ESTABLISHED:
             logging.debug(f"{MSG_IS_NOT_ESTABLISHED}")
             return
