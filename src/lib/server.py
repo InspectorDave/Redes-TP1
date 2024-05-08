@@ -28,34 +28,25 @@ class Server:
         while True:
 
             message, clientAddress = Protocol.decode_received_message(serverSocket)
-            self.__process_new_connetion(message, clientAddress)
+            new_connection_thread = Thread(target=self.__process_new_connetion, args=(message, clientAddress))
+            new_connection_thread.start()
 
     def __process_new_connetion(self, message, clientAddress):
         logging.info(f"{MSG_PROCESSING_NEW_CONNECTION}")
 
         if message.message_type != Message.INITIATE:
             logging.debug(f"{MSG_IS_NOT_INITIATE}")
-            return
+            exit()
         if clientAddress in self.clients:
             # El cliente ya estaba conectado
             logging.debug(f"{MSG_CLIENT_ALREADY_HAS_ASSIGNED_CONNECTION}")
-            return
+            exit()
 
         logging.debug(f"{MSG_RECEIVED_INITIATE}")
 
-        new_thread = Thread(target=self.__process_existing_connection, args=(clientAddress, message))
-        new_thread.start()
         self.clients.append(clientAddress)
 
-        logging.info(f"{MSG_PROCESSED_NEW_CONNECTION}")
-
-        return
-    
-    def __process_existing_connection(self, clientAddress, message_initiate):
-
-        logging.debug(f"{MSG_PROCESSING_EXISTING_CONNECTION}")
-
-        session_protocol = ProtocolFactory.create(message_initiate.protocol_type)
+        session_protocol = ProtocolFactory.create(message.protocol_type)
 
         dedicatedClientSocket = socket(AF_INET, SOCK_DGRAM)
         dedicatedClientSocket.bind((self.host,0))
