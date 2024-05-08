@@ -6,7 +6,7 @@ from lib.protocols.stop_and_wait import *
 from lib.protocols.go_back_n import *
 
 class Client:
-    def __init__(self, server_host, server_port, args):
+    def __init__(self, server_host, server_port, args, transfer_type):
         self.server_host = server_host
         self.server_port = server_port
         self.socket = socket.socket(AF_INET, SOCK_DGRAM)
@@ -17,23 +17,25 @@ class Client:
             self.protocol = GoBackNProtocol()
         else:
             logging.error(f"Error al crear el cliente")
+        self.transfer_type = transfer_type
+        self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self, ))
+        self.end_process = Event()
+        self.thread_manager = Condition()
 
     def start(self):
         self.socket.settimeout(TIME_OUT)
-        new_server_address = self.protocol.perform_client_side_handshake(self.socket, self.server_host, self.server_port, self.file_name)
+        new_server_address = self.protocol.perform_client_side_handshake(self)
         self.server_host, self.server_port = new_server_address
         return
 
     def upload(self, file_path, filename):
         
-        thread_manager = Condition()
         communication_queue = []
-        stop_thread = Event()
 
-        thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self.socket, thread_manager, communication_queue, stop_thread))
+        thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self, self.thread_manager, communication_queue))
         thread_receiver.start()
     
-        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(file_path, filename, self.socket, self.server_host, self.server_port, thread_manager, communication_queue, stop_thread))
+        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(self, file_path, filename, self.thread_manager, communication_queue))
         thread_sender.start()
         return
     
@@ -45,3 +47,15 @@ class Client:
         socket.shutdown(SHUT_RDWR)
         socket.close()
         return
+    
+    def reset_timer(self):
+        self.keep_alive_timer.cancel()
+        self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self,))
+        self.keep_alive_timer.start()
+        return
+    
+def end_process(client):
+    logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
+    client.keep_alive_timer.cancel()
+    client.end_process.set()
+    return
