@@ -2,7 +2,7 @@ from socket import *
 from threading import *
 from lib.constants import *
 
-from lib.messages.message import *
+from lib.message import *
 
 from lib.protocols.protocol import Protocol
 from lib.protocols.stop_and_wait import StopAndWaitProtocol

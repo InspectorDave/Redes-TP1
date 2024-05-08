@@ -4,8 +4,8 @@ from threading import *
 import logging
 import time
 
-from lib.messages.message import Message
-from lib.messages.message import Decoder
+from lib.message import Message
+from lib.message import Decoder
 
 class StopAndWaitProtocol(Protocol):
 

@@ -1,8 +1,6 @@
 import socket
 from lib.constants import *
-from lib.messages.message import *
-from lib.messages.initiate import Initiate
-from lib.messages.inack import Inack
+from lib.message import *
 from lib.file_manager import *
 import logging
 from lib.logging_msg import *
