@@ -70,18 +70,18 @@ class StopAndWaitProtocol(Protocol):
             self.send_message(socket, host, port, message)
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}")
 
-    def downloader_receiver_logic(self,socket:socket.socket, thread_manager, communication_queue, storage_path):
+    def downloader_receiver_logic(self,socket:socket.socket, thread_manager, communication_queue, storage_path, file_name):
         last_sequence_number = 0
         ack_number = 0
         logging.debug(f"{MSG_STORAGE_PATH} {storage_path}")
-        file_manager = FileManager(FILE_MODE_WRITE, storage_path, DEFAULT_FILE_NAME)
+        file_manager = FileManager(FILE_MODE_WRITE, storage_path, file_name)
         while True:
             try: #Para poder hacer que se cierre el archivo en el finally
                 decoded_message, client_address = self.decode_received_message(socket)
                 thread_manager.acquire()
                 if last_sequence_number == decoded_message.sequence_number - 1 or last_sequence_number == 0:
                     file_manager.write_file_bytes(decoded_message.payload)
-                    logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path+DEFAULT_FILE_NAME}")
+                    logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path+file_name}")
                 last_sequence_number = decoded_message.sequence_number
                 message_ack = Senack(decoded_message.sequence_number + 1)
                 communication_queue.append(message_ack)

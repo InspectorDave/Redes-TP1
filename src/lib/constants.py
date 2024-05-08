@@ -9,6 +9,7 @@ DEFAULT_UPLOAD_FILE_PATH = '../test_files/'
 DEFAULT_UPLOAD_FILE_NAME = 'test_file_2.txt'
 
 DEFAULT_DOWNLOAD_DST = '../downloads/'
+DEFAULT_DOWNLOAD_FILE_NAME= 'file1.txt'
 
 BUFFER_SIZE = 1024 # Tamanio del mensaje (Debe ser mayor que el header)
 HEADER_SIZE = 11 # Modificar si se agregan campos al header en clase Message

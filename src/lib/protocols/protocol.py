@@ -45,7 +45,7 @@ class Protocol:
     def receive_ack(self):
         return
     
-    def perform_client_side_handshake(self, socket, host, port):
+    def perform_client_side_handshake(self, socket, host, port, filename):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
 
         transfer_type = Protocol.UPLOAD   # Eventualmente esto se recibe como parámetro
@@ -62,7 +62,7 @@ class Protocol:
             if verify_inack(decoded_message, transfer_type, protocol):
                 break
 
-        self.send_established(socket, downloader_address[0], downloader_address[1])
+        self.send_established(socket, downloader_address[0], downloader_address[1], filename)
 
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return downloader_address
@@ -84,9 +84,10 @@ class Protocol:
 
         return server_address
 
-    def send_established(self, socket, host, port):
+    def send_established(self, socket, host, port, filename):
         logging.info(f"{MSG_SENDING_ESTABLISHED}")
-        message = Established()
+        logging.debug(f"{MSG_FILE_NAME} {filename}")
+        message = Established(filename)
         self.send_message(socket, host, port, message)
         return
 

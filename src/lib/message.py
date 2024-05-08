@@ -69,16 +69,24 @@ class Inack(Message):
 class Established(Message):
     MESSAGE_SIZE = 1 # message_type
 
-    def __init__(self):
+    def __init__(self, filename):
         self.message_type = Message.ESTABLISHED
+        self.filename = filename
         return
 
     def encode(self):
-        return struct.pack("!B", self.message_type)
+        filename_bytes = self.filename.encode('utf-8')
+        filename_length = len(filename_bytes)
+        return struct.pack("!B", self.message_type) + struct.pack("!H", filename_length) + filename_bytes
+        #return struct.pack("!B", self.message_type)
 
     @staticmethod
     def decode_after_fixed_header(data):
-        return Established()
+        filename_length = struct.unpack("!H", data[:2])[0] #H=2 Bytes size
+        filename_bytes = data[2:2+filename_length] #Desde Byte 2 hasta el nombre
+        filename = filename_bytes.decode('utf-8')
+        return Established(filename)
+        #return Established()
 
 class Send(Message):
     VARIABLE_HEADER_SIZE = 4 # sequence_number
