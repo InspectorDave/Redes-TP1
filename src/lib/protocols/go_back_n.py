@@ -2,6 +2,7 @@ import random
 from threading import *
 import logging
 from socket import *
+import time
 
 from lib.protocols.protocol import Protocol
 from lib.file_manager import FileManager
@@ -21,7 +22,7 @@ class GoBackN(Protocol):
         sequence_number = random.randint(1, 1023)
 
         file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
-        file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
+        file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
         messages_not_ackd = []
         
         logging.info(f"{MSG_SENDING_FILE_USING_GO_BACK_N}")
@@ -34,7 +35,7 @@ class GoBackN(Protocol):
                 sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
                 logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
                 logging.debug(f"{MSG_BYTES_SENT} {sent}")
-                file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
+                file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
             thread_manager.notify()
             thread_manager.wait()
 
@@ -94,9 +95,10 @@ class GoBackN(Protocol):
             thread_manager.wait()
             if connection.end_connection_flag.is_set():
                 break
-            message = communication_queue.pop(0)
-            Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
-            logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}")
+            while len(communication_queue) > 0:
+                message = communication_queue.pop(0)
+                Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+                logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}" )
 
         thread_manager.release()
         logging.debug(f"{MSG_DOWNLOADER_SENDING_THREAD_ENDING}")
@@ -110,24 +112,24 @@ class GoBackN(Protocol):
         logging.debug(f"{MSG_STORAGE_PATH} {storage_path}")
         file_manager = FileManager(FILE_MODE_WRITE, storage_path, connection.file_name)
         while connection.end_connection_flag.is_set() == False:
-            try: #Para poder hacer que se cierre el archivo en el finally
-                decoded_message, client_address = Protocol.decode_received_message(connection.socket)
+            try:
+                buffer, clientAddress = connection.socket.recvfrom(Send.MESSAGE_SIZE * WINDOW_SIZE * 2)
+                thread_manager.acquire()
+                connection.reset_timer()
+                while len(buffer) > 0:
+                    decoded_message, buffer = Protocol.decode_message_from_buffer(buffer)
+                    logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_SEQUENCE_N} {str(decoded_message.sequence_number)}" )
+                    if last_sequence_number == decoded_message.sequence_number - 1 or last_sequence_number == 0:
+                        file_manager.write_file_bytes(decoded_message.payload)
+                        logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path + connection.file_name}")
+                        last_sequence_number = decoded_message.sequence_number
+                    message_ack = Senack(last_sequence_number)
+                    communication_queue.append(message_ack)
+                thread_manager.notify()
+                thread_manager.release()
             except TimeoutError:
                 continue
 
-            thread_manager.acquire()
-            connection.reset_timer()
-            if last_sequence_number == decoded_message.sequence_number - 1 or last_sequence_number == 0:
-                file_manager.write_file_bytes(decoded_message.payload)
-                logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path + connection.file_name}")
-            last_sequence_number = decoded_message.sequence_number
-            message_ack = Senack(decoded_message.sequence_number)
-            communication_queue.append(message_ack)
-            thread_manager.notify()
-            thread_manager.release()
-
+        file_manager.close()
         logging.debug(f"{MSG_DOWNLOADER_RECEIVER_THREAD_ENDING}")
-        #finally:
-        #print("CLOSING FILE")
-        #print("FILE: ", file_manager.file)
-        #file_manager.close()
+
