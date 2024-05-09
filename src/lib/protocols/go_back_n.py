@@ -13,7 +13,7 @@ class GoBackN(Protocol):
     CODE = 1
 
     @staticmethod
-    def uploader_sender_logic(connection, file_path):        
+    def uploader_sender_logic(connection, file_path):
         communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         thread_manager.acquire()
@@ -22,31 +22,31 @@ class GoBackN(Protocol):
 
         file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
+        messages_not_ackd = []
         
         logging.info(f"{MSG_SENDING_FILE_USING_GO_BACK_N}")
         while file_chunk:
 
-            message = Send(sequence_number, file_chunk)
-            sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
-            logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
-            logging.debug(f"{MSG_BYTES_SENT} {sent}")
+            while len(messages_not_ackd) < WINDOW_SIZE and file_chunk:
+                message = Send(sequence_number, file_chunk)
+                messages_not_ackd.append(message)
+                sequence_number += 1
+                sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+                logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
+                logging.debug(f"{MSG_BYTES_SENT} {sent}")
+                file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
             thread_manager.notify()
             thread_manager.wait()
 
             if connection.end_connection_flag.is_set():
                 break
 
-            try:
+            while len(communication_queue) > 0:
                 received_message = communication_queue.pop(0)
-            except IndexError:
-                logging.debug(f"{MSG_NO_ACK_RECEIVED}")
-                continue
-
+                if received_message.ack_number >= messages_not_ackd[0].sequence_number:
+                    messages_not_ackd.pop(0)
+            
             connection.reset_timer()
-
-            if received_message.ack_number == sequence_number:
-                sequence_number += 1
-                file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
         if file_chunk != True:
             logging.info(f"{MSG_FILE_SENT}")
@@ -68,18 +68,19 @@ class GoBackN(Protocol):
 
         while True:
             try:
-                decoded_message, downloader_address = Protocol.decode_received_message(connection.socket)
+                buffer, clientAddress = connection.socket.recvfrom(RECV_BUFFER_SIZE)
+                thread_manager.acquire()
+                while len(buffer) > 0:
+                    decoded_message, buffer = Protocol.decode_message_from_buffer(buffer)
+                    logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_ACK_N} {str(decoded_message.ack_number)}" )
+                    communication_queue.append(decoded_message)
+                thread_manager.notify()
+                thread_manager.release()
             except TimeoutError:
                 connection.wake_up_threads()
                 if connection.end_connection_flag.is_set():
                     break
                 continue
-
-            thread_manager.acquire()
-            logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_ACK_N} {str(decoded_message.ack_number)}" )
-            communication_queue.append(decoded_message)
-            thread_manager.notify()
-            thread_manager.release()
 
         logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
 

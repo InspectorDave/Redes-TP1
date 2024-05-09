@@ -138,6 +138,21 @@ class Protocol:
         return server_address
 
     @staticmethod
+    def verify_inack(message, transfer_type, protocol):
+        if message.message_type != Message.INACK:
+            logging.debug(f"{MSG_IS_NOT_INACK}")
+            return False
+        print("INACK transfer type: ", message.transfer_type, " Client transfer type: ", transfer_type)
+        if message.transfer_type != transfer_type:
+            logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
+            return False
+        if message.protocol_type != protocol:
+            logging.debug(f"{MSG_PROTOCOL_NOT_MATCH}")
+            return False
+        logging.debug(f"{MSG_RECEIVED_INACK}")
+        return True
+
+    @staticmethod
     def send_established(socket, host, port, filename):
         logging.info(f"{MSG_SENDING_ESTABLISHED}")
         logging.debug(f"{MSG_FILE_NAME} {filename}")
@@ -160,16 +175,14 @@ class Protocol:
         return decoded_message, clientAddress
     
     @staticmethod
-    def verify_inack(message, transfer_type, protocol):
-        if message.message_type != Message.INACK:
-            logging.debug(f"{MSG_IS_NOT_INACK}")
-            return False
-        print("INACK transfer type: ", message.transfer_type, " Client transfer type: ", transfer_type)
-        if message.transfer_type != transfer_type:
-            logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
-            return False
-        if message.protocol_type != protocol:
-            logging.debug(f"{MSG_PROTOCOL_NOT_MATCH}")
-            return False
-        logging.debug(f"{MSG_RECEIVED_INACK}")
-        return True
+    def decode_message_from_buffer(buffer):
+        fixed_header = buffer[:Message.FIXED_HEADER_SIZE]
+        message_type = Decoder.decode_fixed_header(fixed_header)
+        message_class = MessageClassFactory.create(message_type)
+        buffer = buffer[Message.FIXED_HEADER_SIZE:]
+        rest_of_message = buffer[:(message_class.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE)]
+        decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
+        buffer = buffer[(message_class.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE):]
+        logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {decoded_message.message_type}")
+        logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
+        return decoded_message, buffer
