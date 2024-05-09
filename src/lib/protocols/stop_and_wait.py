@@ -91,8 +91,6 @@ class StopAndWaitProtocol(Protocol):
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}")
 
     def downloader_receiver_logic(self, connection, communication_queue, storage_path):
-        logging.info(f"Downloader receiver logic socket: {connection.socket}")
-
         thread_manager = connection.thread_manager
         last_sequence_number = 0
 

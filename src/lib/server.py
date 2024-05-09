@@ -22,7 +22,6 @@ class Server:
         logging.info(f"{MSG_SERVER_READY_TO_RECEIVE}")
 
         while True:
-
             message, clientAddress = Protocol.decode_received_message(serverSocket)
             new_connection_thread = Thread(target=self.__process_new_connetion, args=(message, clientAddress))
             new_connection_thread.start()

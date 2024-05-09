@@ -70,18 +70,8 @@ class Protocol:
 
     @staticmethod
     def perform_server_side_handshake(server, first_message, client_address):
-        if first_message.message_type != Message.INITIATE:
-            logging.debug(f"{MSG_IS_NOT_INITIATE}")
-            exit()
-        if client_address in server.clients:
-            # El cliente ya estaba conectado
-            logging.debug(f"{MSG_CLIENT_ALREADY_HAS_ASSIGNED_CONNECTION}")
-            exit()
-
-        logging.debug(f"{MSG_RECEIVED_INITIATE}")
-
-        server.clients.append(client_address)
         
+        Protocol.process_initiate(first_message, client_address, server)
         from lib.protocols.protocol_factory import ProtocolFactory
 
         session_protocol = ProtocolFactory.create(first_message.protocol_type)
@@ -109,6 +99,17 @@ class Protocol:
         self.send_message(socket, host, port, message)
         return
     
+    @staticmethod
+    def process_initiate(first_message, client_address, server):
+        if first_message.message_type != Message.INITIATE:
+            logging.debug(f"{MSG_IS_NOT_INITIATE}")
+            exit()
+        if client_address in server.clients:
+            logging.debug(f"{MSG_CLIENT_ALREADY_HAS_ASSIGNED_CONNECTION}")
+            exit()
+        logging.debug(f"{MSG_RECEIVED_INITIATE}")
+        server.clients.append(client_address)
+
     @staticmethod
     def sendInack (dedicatedClientSocket, clientAddress):
         logging.debug(f"{MSG_SENDING_INACK}")
