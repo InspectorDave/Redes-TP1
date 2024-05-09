@@ -56,18 +56,22 @@ class Client(Connection):
 
         thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self, communication_queue))
         thread_receiver.start()
-    
         thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(self, file_path, filename, communication_queue))
         thread_sender.start()
         return
     
     def download(self, file_path, filename):
+        logging.info(f"{MSG_PROCESSING_NEW_CONNECTION}")
 
+        connection = Connection((self.destination_host, self.destination_port), self.transfer_type, self.protocol, filename)
+        connection.keep_alive_timer.start()
         communication_queue = []
 
-        thread_receiver = Thread(target=self.protocol.downloader_receiver_logic, args=(self, communication_queue))
+        connection.socket.settimeout(TIME_OUT)
+
+        thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic, args=(connection, communication_queue, file_path))
         thread_receiver.start()
-    
-        thread_sender = Thread(target=self.protocol.downloader_sender_logic, args=(self, file_path, filename, communication_queue))
+        thread_sender = Thread(target=connection.protocol.downloader_sender_logic, args=(connection, communication_queue))
         thread_sender.start()
+
         return

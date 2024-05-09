@@ -3,3 +3,5 @@ __pycache__/*
 __server_storage__/
 __server_storage__/*
 server_storage/
+downloads/
+downloads/*
