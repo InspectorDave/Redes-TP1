@@ -71,7 +71,7 @@ def parse_upload_arguments():
                         action='store',
                         type = str,
                         help='protocol to use: s=StopAndWait or g=GoBackN',
-                        default='s')
+                        required=True)
     
     args = parser.parse_args()
     _verify_upload_arguments(args)
@@ -111,7 +111,7 @@ def parse_download_arguments():
                         action='store',
                         type = str,
                         help='protocol to use: s= StopAndWait; g=GoBackN',
-                        default='s')
+                        required=True)
     
     args = parser.parse_args()
     _verify_download_arguments(args)
