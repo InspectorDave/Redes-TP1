@@ -25,22 +25,26 @@ class GoBackN(Protocol):
         file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
         messages_not_ackd = []
         
+        resend_window_flag = Event()
+        resend_window_timer = Timer(TIME_OUT, GoBackN.resend_window_timer, args=(resend_window_flag,))
+        resend_window_timer.start()
+
         logging.info(f"{MSG_SENDING_FILE_USING_GO_BACK_N}")
+        
         while file_chunk or len(messages_not_ackd) != 0:
             while file_chunk and len(messages_not_ackd) < WINDOW_SIZE:
                 message = Send(last_sent_sequence_number, file_chunk)
+                sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
                 messages_not_ackd.append(message)
                 last_sent_sequence_number += 1
                 file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
 
-            for message in messages_not_ackd:
-                #random_i = random.randint(1, 10)
-                #if random_i == 2:
-                #    print("Simulating packet loss", message.sequence_number, " random number: ", random)
-                #else:
-                sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
-                logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
-                logging.debug(f"{MSG_BYTES_SENT} {sent}")
+            if resend_window_flag.is_set():
+                for message in messages_not_ackd:
+                    sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+                    logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
+                    logging.debug(f"{MSG_BYTES_SENT} {sent}")
+                resend_window_flag.clear()
 
             thread_manager.notify()
             thread_manager.wait()
@@ -50,7 +54,8 @@ class GoBackN(Protocol):
 
             while len(communication_queue) > 0:
                 received_message = communication_queue.pop(0)
-                if len(messages_not_ackd) > 0 and received_message.ack_number >= messages_not_ackd[0].sequence_number:
+                while len(messages_not_ackd) > 0 and received_message.ack_number >= messages_not_ackd[0].sequence_number:
+                    GoBackN.reset_timer(resend_window_timer, resend_window_flag)
                     messages_not_ackd.pop(0)
             
             connection.reset_timer()
@@ -138,3 +143,14 @@ class GoBackN(Protocol):
 
         file_manager.close()
         logging.debug(f"{MSG_DOWNLOADER_RECEIVER_THREAD_ENDING}")
+
+    @staticmethod
+    def resend_window_timer(resend_window_flag):
+        resend_window_flag.set()
+        return
+    
+    @staticmethod
+    def reset_timer(timer, resend_window_flag):
+        timer.cancel()
+        timer = Timer(TIME_OUT, GoBackN.resend_window_timer, args = (resend_window_flag,))
+        timer.start()
