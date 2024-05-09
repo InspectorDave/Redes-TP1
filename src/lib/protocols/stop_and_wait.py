@@ -52,7 +52,7 @@ class StopAndWaitProtocol(Protocol):
                 last_received_ack_number = received_message.ack_number
                 file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
 
-        if file_chunk != True:
+        if not file_chunk:
             logging.info(f"{MSG_FILE_SENT}")
         logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
