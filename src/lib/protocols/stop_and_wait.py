@@ -68,7 +68,7 @@ class StopAndWaitProtocol(Protocol):
             try:
                 decoded_message, downloader_address = self.decode_received_message(connection.socket)
             except TimeoutError:
-                self.wake_up_threads(thread_manager)
+                connection.wake_up_threads()
                 if connection.end_connection_flag.is_set():
                     break
                 continue
@@ -125,9 +125,3 @@ class StopAndWaitProtocol(Protocol):
         #print("CLOSING FILE")
         #print("FILE: ", file_manager.file)
         #file_manager.close()
-
-    def wake_up_threads(self, thread_manager):
-        thread_manager.acquire()
-        thread_manager.notify()
-        thread_manager.release()
-        return

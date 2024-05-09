@@ -22,6 +22,12 @@ class Connection:
         socket.close()
         return
     
+    def wake_up_threads(self):
+        self.thread_manager.acquire()
+        self.thread_manager.notify()
+        self.thread_manager.release()
+        return
+
     def reset_timer(self):
         self.keep_alive_timer.cancel()
         self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
@@ -55,6 +61,13 @@ class Client(Connection):
         thread_sender.start()
         return
     
-    def download(self):
-        complete_file = self.protocol.receive_file(socket)
-        return complete_file
+    def download(self, file_path, filename):
+
+        communication_queue = []
+
+        thread_receiver = Thread(target=self.protocol.downloader_receiver_logic, args=(self, communication_queue))
+        thread_receiver.start()
+    
+        thread_sender = Thread(target=self.protocol.downloader_sender_logic, args=(self, file_path, filename, communication_queue))
+        thread_sender.start()
+        return
