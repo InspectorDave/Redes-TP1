@@ -8,7 +8,11 @@ from lib.protocols.protocol import Protocol
 from lib.protocols.protocol_factory import ProtocolFactory
 
 if __name__ == "__main__":
-    args = parse_download_arguments()
+    try:
+        args = parse_download_arguments()
+    except Exception as e:
+        logging.error(e)
+        exit(-1)
     prepare_logging(args)
     protocol = ProtocolFactory.create_from_arguments(args.protocol)
     connection = Connection((args.host, args.port), Protocol.DOWNLOAD, protocol, args.name)
