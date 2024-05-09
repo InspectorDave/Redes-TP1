@@ -35,7 +35,7 @@ class Server:
         match connection.transfer_type:
             case Protocol.UPLOAD:
             # The server is the downloader
-                logging.info(f"{MSG_DOWNLOADING_FILE}")
+                logging.info(f"{MSG_DOWNLOADING_FILE} {MSG_WITH_PROTOCOL} {connection.protocol.__class__.__name__}")
                 thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic,\
                                          args=(connection, self.storage))
                 thread_receiver.start()
@@ -45,7 +45,7 @@ class Server:
                 return
             case Protocol.DOWNLOAD:
             # The server is the uploader
-                logging.info(f"{MSG_UPLOADING_FILE}")
+                logging.info(f"{MSG_UPLOADING_FILE} {MSG_WITH_PROTOCOL} {connection.protocol.__class__.__name__}")
                 thread_receiver = Thread(target=connection.protocol.uploader_receiver_logic,\
                                          args=(connection,))
                 thread_receiver.start()
