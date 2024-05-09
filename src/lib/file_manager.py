@@ -55,9 +55,7 @@ class FileManager:
     
     def write_file_bytes(self, chunk_info):
         try:
-            #logging.debug(f"Chunk info: {chunk_info}")
             bytes_written = self.file.write(chunk_info)
-            logging.debug(f"{MSG_BYTES_WRITTEN} {bytes_written}")
             self.file.flush()
         except Exception as e:
             raise Exception(f"Error: {e}")

@@ -32,7 +32,6 @@ class StopAndWaitProtocol(Protocol):
             sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
             last_sent_sequence_number = sequence_number
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
-            logging.debug(f"{MSG_BYTES_SENT} {sent}")
             thread_manager.notify()
             thread_manager.wait()
 
@@ -57,7 +56,7 @@ class StopAndWaitProtocol(Protocol):
         logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
         connection.end_connection_flag.set()
-        connection.keep_alive_timer.cancel()
+        connection.timeout_timer.cancel()
         thread_manager.release()
         return
 

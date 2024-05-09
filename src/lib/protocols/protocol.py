@@ -65,7 +65,7 @@ class Protocol:
         dedicated_client_socket.bind((server.host,0))
         Protocol.sendInack(dedicated_client_socket, client_address, first_message)
 
-        dedicated_client_socket.settimeout(KEEP_ALIVE)
+        dedicated_client_socket.settimeout(IDLE_TIMEOUT)
         try: 
             established_message, client_address = Protocol.decode_received_message(dedicated_client_socket)
         except TimeoutError:
@@ -155,7 +155,6 @@ class Protocol:
         message_type = Decoder.decode_fixed_header(fixed_header)
         rest_of_message = recv_buffer
         decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
-        logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
 
         return decoded_message, clientAddress
     
@@ -168,5 +167,4 @@ class Protocol:
         rest_of_message = buffer[:(message_class.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE)]
         decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
         buffer = buffer[(message_class.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE):]
-        logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
         return decoded_message, buffer

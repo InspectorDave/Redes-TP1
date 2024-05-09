@@ -19,7 +19,7 @@ class GoBackN(Protocol):
         thread_manager = connection.thread_manager
         thread_manager.acquire()
 
-        last_sent_sequence_number = random.randint(1, 1023)
+        last_sent_sequence_number = 1 # random.randint(1, 1023)
 
         file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
@@ -28,6 +28,8 @@ class GoBackN(Protocol):
         resend_window_flag = Event()
         resend_window_timer = Timer(TIME_OUT, GoBackN.resend_window_timer, args=(resend_window_flag,))
         resend_window_timer.start()
+
+        thread_manager.notify()
 
         logging.info(f"{MSG_SENDING_FILE_USING_GO_BACK_N}")
         
@@ -38,40 +40,39 @@ class GoBackN(Protocol):
 
                 sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
                 logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
-                logging.debug(f"{MSG_BYTES_SENT} {sent}")
 
                 messages_not_ackd.append(message)
                 last_sent_sequence_number += 1
                 file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
 
             if resend_window_flag.is_set():
+                logging.warning(f"{MSG_RESENDING_WINDOW}")
                 for message in messages_not_ackd:
-
                     sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
                     logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
-                    logging.debug(f"{MSG_BYTES_SENT} {sent}")
 
                 resend_window_flag.clear()
+                GoBackN.reset_timer(resend_window_timer, resend_window_flag)
 
-            thread_manager.notify()
             thread_manager.wait()
 
             if connection.end_connection_flag.is_set():
                 break
-
+            
             while len(communication_queue) > 0:
                 received_message = communication_queue.pop(0)
+                connection.reset_timer()
                 while len(messages_not_ackd) > 0 and received_message.ack_number >= messages_not_ackd[0].sequence_number:
-                    GoBackN.reset_timer(resend_window_timer, resend_window_flag)
+                    if received_message.ack_number == messages_not_ackd[0].sequence_number:
+                        GoBackN.reset_timer(resend_window_timer, resend_window_flag)
                     messages_not_ackd.pop(0)
-                    connection.reset_timer()
 
         if not file_chunk:
             logging.info(f"{MSG_FILE_SENT}")
         logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
         connection.end_connection_flag.set()
-        connection.keep_alive_timer.cancel()
+        connection.timeout_timer.cancel()
         thread_manager.release()
         return
 
@@ -85,20 +86,26 @@ class GoBackN(Protocol):
         thread_manager.release()
 
         while True:
+            # if connection.end_connection_flag.is_set():
+            #     break
             try:
                 buffer, clientAddress = connection.socket.recvfrom(RECV_BUFFER_SIZE)
-                thread_manager.acquire()
-                while len(buffer) > 0:
-                    decoded_message, buffer = Protocol.decode_message_from_buffer(buffer)
-                    logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_ACK_N} {str(decoded_message.ack_number)}" )
-                    communication_queue.append(decoded_message)
-                thread_manager.notify()
-                thread_manager.release()
             except TimeoutError:
                 connection.wake_up_threads()
                 if connection.end_connection_flag.is_set():
                     break
                 continue
+            thread_manager.acquire()
+            while len(buffer) > 0:
+                # if connection.end_connection_flag.is_set():
+                #     break
+                connection.reset_timer()
+                decoded_message, buffer = Protocol.decode_message_from_buffer(buffer)
+                logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_ACK_N} {str(decoded_message.ack_number)}" )
+                communication_queue.append(decoded_message)
+
+            thread_manager.notify()
+            thread_manager.release()
 
         logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
 
