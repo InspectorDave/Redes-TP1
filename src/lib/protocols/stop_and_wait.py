@@ -113,7 +113,7 @@ class StopAndWaitProtocol(Protocol):
         logging.debug(f"{MSG_STORAGE_PATH} {storage_path}")
         file_manager = FileManager(FILE_MODE_WRITE, storage_path, connection.file_name)
         while connection.end_connection_flag.is_set() == False:
-            try: #Para poder hacer que se cierre el archivo en el finally
+            try:
                 decoded_message, client_address = Protocol.decode_received_message(connection.socket)
             except TimeoutError:
                 continue

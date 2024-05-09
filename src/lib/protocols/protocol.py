@@ -142,7 +142,6 @@ class Protocol:
         if message.message_type != Message.INACK:
             logging.debug(f"{MSG_IS_NOT_INACK}")
             return False
-        print("INACK transfer type: ", message.transfer_type, " Client transfer type: ", transfer_type)
         if message.transfer_type != transfer_type:
             logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
             return False
