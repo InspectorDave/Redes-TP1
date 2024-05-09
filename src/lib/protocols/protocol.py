@@ -22,18 +22,6 @@ class Protocol:
         sent = client_socket.sendto(message_bytes, (host, port))
         return sent
 
-    # Recibe un archivo, socket, host, port
-    # Se encarga de leer el archivo, setear los nros
-    # de paquetes, acks, etc y lo envia
-    def send_file(self, file_path, client_socket, host, port):
-        logging.error(f"{MSG_SEND_FILE_METHOD_NOT_IMPLEMENTED}")
-        raise NotImplementedError(f"{MSG_SEND_FILE_METHOD_NOT_IMPLEMENTED}")
-    
-    # Se encarga de recibir el archivo e ir escribiendolo
-    def receive_file(self,client_socket:socket):
-        logging.error(f"{MSG_RECEIVE_FILE_METHOD_NOT_IMPLEMENTED}")
-        raise NotImplementedError(f"{MSG_RECEIVE_FILE_METHOD_NOT_IMPLEMENTED}")
-
     # El receive solo se ocupa de recibir un paquete y decodificarlo
     @staticmethod
     def receive(client_socket:socket):
@@ -167,8 +155,6 @@ class Protocol:
         message_type = Decoder.decode_fixed_header(fixed_header)
         rest_of_message = recv_buffer
         decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
-
-        logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {decoded_message.message_type}")
         logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
 
         return decoded_message, clientAddress
@@ -182,6 +168,5 @@ class Protocol:
         rest_of_message = buffer[:(message_class.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE)]
         decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
         buffer = buffer[(message_class.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE):]
-        logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {decoded_message.message_type}")
         logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
         return decoded_message, buffer
