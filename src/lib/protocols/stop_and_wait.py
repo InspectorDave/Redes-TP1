@@ -12,7 +12,7 @@ from lib.message import Send, Senack
 class StopAndWaitProtocol(Protocol):
     CODE = 0
 
-    def uploader_sender_logic(self, connection, file_path, filename, communication_queue):
+    def uploader_sender_logic(self, connection, file_path, communication_queue):
         logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
         
         thread_manager = connection.thread_manager
@@ -20,7 +20,7 @@ class StopAndWaitProtocol(Protocol):
 
         sequence_number = random.randint(1, 1023)
 
-        file_manager = FileManager(FILE_MODE_READ, file_path, filename)
+        file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         
         while file_chunk:
