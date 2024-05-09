@@ -72,24 +72,29 @@ class Protocol:
     def perform_server_side_handshake(server, first_message, client_address):
         
         Protocol.process_initiate(first_message, client_address, server)
+        
         from lib.protocols.protocol_factory import ProtocolFactory
-
         session_protocol = ProtocolFactory.create(first_message.protocol_type)
 
         dedicated_client_socket = socket(AF_INET, SOCK_DGRAM)
         dedicated_client_socket.bind((server.host,0))
-
         Protocol.sendInack(dedicated_client_socket, client_address)
 
-        established_message, client_address = Protocol.decode_received_message(dedicated_client_socket)
-
+        dedicated_client_socket.settimeout(KEEP_ALIVE)
+        try: 
+            established_message, client_address = Protocol.decode_received_message(dedicated_client_socket)
+        except TimeoutError:
+            logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
+            logging.warn(f"{MSG_ESTABLISHED_NOT_RECEIVED}")
+            exit()
+        
         if established_message.message_type != Message.ESTABLISHED:
             logging.debug(f"{MSG_IS_NOT_ESTABLISHED}")
-            return
-        
+            exit()
         logging.debug(f"{MSG_IS_ESTABLISHED} {established_message.filename}")
 
         connection = Connection(client_address, first_message.transfer_type, session_protocol, established_message.filename)
+        dedicated_client_socket.settimeout(None)
         connection.socket = dedicated_client_socket
 
         return connection
