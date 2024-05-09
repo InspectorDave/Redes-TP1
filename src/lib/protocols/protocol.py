@@ -22,18 +22,6 @@ class Protocol:
         sent = client_socket.sendto(message_bytes, (host, port))
         return sent
 
-    # Recibe un archivo, socket, host, port
-    # Se encarga de leer el archivo, setear los nros
-    # de paquetes, acks, etc y lo envia
-    def send_file(self, file_path, client_socket, host, port):
-        logging.error(f"{MSG_SEND_FILE_METHOD_NOT_IMPLEMENTED}")
-        raise NotImplementedError(f"{MSG_SEND_FILE_METHOD_NOT_IMPLEMENTED}")
-    
-    # Se encarga de recibir el archivo e ir escribiendolo
-    def receive_file(self,client_socket:socket):
-        logging.error(f"{MSG_RECEIVE_FILE_METHOD_NOT_IMPLEMENTED}")
-        raise NotImplementedError(f"{MSG_RECEIVE_FILE_METHOD_NOT_IMPLEMENTED}")
-
     # El receive solo se ocupa de recibir un paquete y decodificarlo
     @staticmethod
     def receive(client_socket:socket):
@@ -138,6 +126,20 @@ class Protocol:
         return server_address
 
     @staticmethod
+    def verify_inack(message, transfer_type, protocol):
+        if message.message_type != Message.INACK:
+            logging.debug(f"{MSG_IS_NOT_INACK}")
+            return False
+        if message.transfer_type != transfer_type:
+            logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
+            return False
+        if message.protocol_type != protocol:
+            logging.debug(f"{MSG_PROTOCOL_NOT_MATCH}")
+            return False
+        logging.debug(f"{MSG_RECEIVED_INACK}")
+        return True
+
+    @staticmethod
     def send_established(socket, host, port, filename):
         logging.info(f"{MSG_SENDING_ESTABLISHED}")
         logging.debug(f"{MSG_FILE_NAME} {filename}")
@@ -153,23 +155,18 @@ class Protocol:
         message_type = Decoder.decode_fixed_header(fixed_header)
         rest_of_message = recv_buffer
         decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
-
-        logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {decoded_message.message_type}")
         logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
 
         return decoded_message, clientAddress
     
     @staticmethod
-    def verify_inack(message, transfer_type, protocol):
-        if message.message_type != Message.INACK:
-            logging.debug(f"{MSG_IS_NOT_INACK}")
-            return False
-        print("INACK transfer type: ", message.transfer_type, " Client transfer type: ", transfer_type)
-        if message.transfer_type != transfer_type:
-            logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
-            return False
-        if message.protocol_type != protocol:
-            logging.debug(f"{MSG_PROTOCOL_NOT_MATCH}")
-            return False
-        logging.debug(f"{MSG_RECEIVED_INACK}")
-        return True
+    def decode_message_from_buffer(buffer):
+        fixed_header = buffer[:Message.FIXED_HEADER_SIZE]
+        message_type = Decoder.decode_fixed_header(fixed_header)
+        message_class = MessageClassFactory.create(message_type)
+        buffer = buffer[Message.FIXED_HEADER_SIZE:]
+        rest_of_message = buffer[:(message_class.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE)]
+        decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
+        buffer = buffer[(message_class.MESSAGE_SIZE - Message.FIXED_HEADER_SIZE):]
+        logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
+        return decoded_message, buffer

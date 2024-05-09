@@ -31,6 +31,22 @@ class Decoder:
         else:
             raise ValueError("Invalid message type")
 
+class MessageClassFactory:
+    @staticmethod
+    def create(message_type):
+        if message_type == Message.INITIATE:
+            return Initiate
+        elif message_type == Message.INACK:
+            return Inack
+        elif message_type == Message.SEND:
+            return Send
+        elif message_type == Message.SENACK:
+            return Senack
+        elif message_type == Message.ESTABLISHED:
+            return Established
+        else:
+            raise ValueError("Invalid message type")
+
 class Initiate(Message):
     MESSAGE_SIZE = 3 # message_type + transfer_type + protocol_type
 

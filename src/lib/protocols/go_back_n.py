@@ -1,30 +1,162 @@
-from lib.protocols.protocol import *
+import random
+from threading import *
+import logging
+from socket import *
+import time
+
+from lib.protocols.protocol import Protocol
+from lib.file_manager import FileManager
 from lib.logging_msg import *
-from lib.log import *
+from lib.constants import *
+from lib.message import Send, Senack
 
-class GoBackNProtocol(Protocol):
+class GoBackN(Protocol):
+    CODE = 1
 
-    def send_file(self, file_path, client_socket, host, port):
-        message_type = Message.SEND
-        transfer_type = Protocol.UPLOAD
-        protocol_type = Protocol.GO_BACK_N
-        file_manager = FileManager(FILE_MODE_READ, file_path)
-        file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
-        while file_chunk:
-            message = Message(message_type, transfer_type,protocol_type, self.packet_number, self.ack_number, file_chunk)
-            sent = self.send_message(client_socket, host, port, message)
-            self.packet_number += 1
-            self.ack_number += 1
-            logging.debug(f"{MSG_BYTES_SENT} {sent}")
-            file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
+    @staticmethod
+    def uploader_sender_logic(connection, file_path):
+        communication_queue = connection.sender_receiver_communication_queue
+        thread_manager = connection.thread_manager
+        thread_manager.acquire()
+
+        last_sent_sequence_number = random.randint(1, 1023)
+
+        file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
+        file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
+        messages_not_ackd = []
+        
+        resend_window_flag = Event()
+        resend_window_timer = Timer(TIME_OUT, GoBackN.resend_window_timer, args=(resend_window_flag,))
+        resend_window_timer.start()
+
+        logging.info(f"{MSG_SENDING_FILE_USING_GO_BACK_N}")
+        
+        while file_chunk or len(messages_not_ackd) != 0:
+            while file_chunk and len(messages_not_ackd) < WINDOW_SIZE:
+
+                message = Send(last_sent_sequence_number, file_chunk)
+
+                sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+                logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
+                logging.debug(f"{MSG_BYTES_SENT} {sent}")
+
+                messages_not_ackd.append(message)
+                last_sent_sequence_number += 1
+                file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
+
+            if resend_window_flag.is_set():
+                for message in messages_not_ackd:
+
+                    sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+                    logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
+                    logging.debug(f"{MSG_BYTES_SENT} {sent}")
+
+                resend_window_flag.clear()
+
+            thread_manager.notify()
+            thread_manager.wait()
+
+            if connection.end_connection_flag.is_set():
+                break
+
+            while len(communication_queue) > 0:
+                received_message = communication_queue.pop(0)
+                while len(messages_not_ackd) > 0 and received_message.ack_number >= messages_not_ackd[0].sequence_number:
+                    GoBackN.reset_timer(resend_window_timer, resend_window_flag)
+                    messages_not_ackd.pop(0)
+                    connection.reset_timer()
+
+        if not file_chunk:
+            logging.info(f"{MSG_FILE_SENT}")
+        logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
-        logging.debug(f"{MSG_SENT_USING_GO_BACK_N}")
+        connection.end_connection_flag.set()
+        connection.keep_alive_timer.cancel()
+        thread_manager.release()
+        return
 
-    def receive_file(self,client_socket:socket):
-        file_manager = FileManager(FILE_MODE_WRITE, DEFAULT_SERVER_STORAGE)
-        file_manager.open_to_write(DEFAULT_SERVER_STORAGE)
-        #while (not conection_finalized):
-        #    message_recv = self.receive(client_socket)
-        #    file_manager.write_file_bytes(message_recv.get_payload())
+    @staticmethod
+    def uploader_receiver_logic(connection):
+        communication_queue = connection.sender_receiver_communication_queue
+        thread_manager = connection.thread_manager
+
+        thread_manager.acquire()
+        thread_manager.wait()
+        thread_manager.release()
+
+        while True:
+            try:
+                buffer, clientAddress = connection.socket.recvfrom(RECV_BUFFER_SIZE)
+                thread_manager.acquire()
+                while len(buffer) > 0:
+                    decoded_message, buffer = Protocol.decode_message_from_buffer(buffer)
+                    logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_ACK_N} {str(decoded_message.ack_number)}" )
+                    communication_queue.append(decoded_message)
+                thread_manager.notify()
+                thread_manager.release()
+            except TimeoutError:
+                connection.wake_up_threads()
+                if connection.end_connection_flag.is_set():
+                    break
+                continue
+
+        logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
+
+    @staticmethod
+    def downloader_sender_logic(connection):
+        communication_queue = connection.sender_receiver_communication_queue
+        thread_manager = connection.thread_manager
+        thread_manager.acquire()
+
+        while True:
+            thread_manager.wait()
+            if connection.end_connection_flag.is_set():
+                break
+            while len(communication_queue) > 0:
+                message = communication_queue.pop(0)
+                Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+                logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}" )
+
+        thread_manager.release()
+        logging.debug(f"{MSG_DOWNLOADER_SENDING_THREAD_ENDING}")
+
+    @staticmethod
+    def downloader_receiver_logic(connection, storage_path):
+        communication_queue = connection.sender_receiver_communication_queue
+        thread_manager = connection.thread_manager
+        last_sequence_number = 0
+
+        logging.debug(f"{MSG_STORAGE_PATH} {storage_path}")
+        file_manager = FileManager(FILE_MODE_WRITE, storage_path, connection.file_name)
+        while connection.end_connection_flag.is_set() == False:
+            try:
+                buffer, clientAddress = connection.socket.recvfrom(Send.MESSAGE_SIZE * WINDOW_SIZE * 2)
+                thread_manager.acquire()
+                connection.reset_timer()
+                while len(buffer) > 0:
+                    decoded_message, buffer = Protocol.decode_message_from_buffer(buffer)
+                    logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_SEQUENCE_N} {str(decoded_message.sequence_number)}" )
+                    if last_sequence_number == decoded_message.sequence_number - 1 or last_sequence_number == 0:
+                        file_manager.write_file_bytes(decoded_message.payload)
+                        logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path + connection.file_name}")
+                        last_sequence_number = decoded_message.sequence_number
+                    message_ack = Senack(last_sequence_number)
+                    communication_queue.append(message_ack)
+                thread_manager.notify()
+                thread_manager.release()
+            except TimeoutError:
+                continue
+
         file_manager.close()
-        logging.debug(f"{MSG_RECEIVED_USING_GO_BACK_N}")
+        logging.debug(f"{MSG_DOWNLOADER_RECEIVER_THREAD_ENDING}")
+
+    @staticmethod
+    def resend_window_timer(resend_window_flag):
+        resend_window_flag.set()
+        return
+    
+    @staticmethod
+    def reset_timer(timer, resend_window_flag):
+        timer.cancel()
+        timer = Timer(TIME_OUT, GoBackN.resend_window_timer, args = (resend_window_flag,))
+        timer.start()

@@ -17,11 +17,6 @@ class Connection:
         self.sender_receiver_communication_queue = []
         self.end_connection_flag = Event()
         self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)        
-
-    def close_socket():
-        socket.shutdown(SHUT_RDWR)
-        socket.close()
-        return
     
     def wake_up_threads(self):
         self.thread_manager.acquire()
@@ -39,7 +34,5 @@ class Connection:
         logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
         self.keep_alive_timer.cancel()
         self.end_connection_flag.set()
-        self.thread_manager.acquire()
-        self.thread_manager.notify()
-        self.thread_manager.release()
+        self.wake_up_threads()
         return

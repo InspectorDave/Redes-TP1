@@ -22,19 +22,26 @@ class Client:
     def upload(self):
         thread_receiver = Thread(target = self.connection.protocol.uploader_receiver_logic,\
                                  args = (self.connection,))
-        thread_receiver.start()
         thread_sender = Thread(target = self.connection.protocol.uploader_sender_logic,\
                                args = (self.connection, self.file_path))
-        thread_sender.start()
 
+        self.run_threads(thread_receiver, thread_sender)
         return
     
     def download(self):
         thread_receiver = Thread(target = self.connection.protocol.downloader_receiver_logic,\
                                  args = (self.connection, self.file_path))
-        thread_receiver.start()
+        
         thread_sender = Thread(target = self.connection.protocol.downloader_sender_logic,\
                                args = (self.connection,))
+        
+        self.run_threads(thread_receiver, thread_sender)
+        return
+    
+    def run_threads(self, thread_receiver, thread_sender):
+        thread_receiver.start()
         thread_sender.start()
-
+        thread_sender.join()
+        thread_receiver.join()
+        logging.info(f"{MSG_CONNECTION_ENDED}")    
         return

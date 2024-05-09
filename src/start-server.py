@@ -4,7 +4,11 @@ from lib.constants import *
 from lib.log import *
 
 if __name__ == "__main__":
-    args = parse_server_arguments()
+    try:
+        args = parse_server_arguments()
+    except Exception as e:
+        logging.error(e)
+        exit(-1)
     prepare_logging(args)
     logging.debug(f"{args}")
     server = Server(args.host, args.port, args)
