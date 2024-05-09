@@ -8,10 +8,10 @@ En este trabajo práctico se busca implementar un protocolo stop and wait y un p
 
 # Integrantes
 
-| <center>Alumno</center> | <center>Padrón</center> | <center>Mail</center> |
-|:------------------------|:-----------------------:|:----------------------|
-| **Mundani Vegega, Ezequiel** | 102312 | emundani@fi.uba.ar | 
-| **Sicca, Fabio** | 104892 | fsicca@fi.uba.ar | 
+| <center>Alumno</center> | <center>Padrón</center> | <center>Mail</center> | <center>GitHub</center>
+|:------------------------|:-----------------------:|:----------------------|:----------------------|
+| **Mundani Vegega, Ezequiel** | 102312 | emundani@fi.uba.ar | InspectorDave |
+| **Sicca, Fabio** | 104892 | fsicca@fi.uba.ar | FabioSicca |
 
 # Cómo correr el proyecto
 
