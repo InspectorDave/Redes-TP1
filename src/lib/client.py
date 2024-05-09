@@ -1,50 +1,22 @@
 from socket import *
-from lib.constants import BUFFER_SIZE
 from lib.message import *
-from lib.protocols.protocol import *
-from lib.protocols.stop_and_wait import *
-from lib.protocols.go_back_n import *
+from lib.logging_msg import *
+from lib.constants import *
+from threading import *
+import logging
 
-class Client:
-    def __init__(self, server_host, server_port, args, transfer_type):
-        self.server_host = server_host
-        self.server_port = server_port
-        self.socket = socket.socket(AF_INET, SOCK_DGRAM)
-        self.file_name = args.name
+class Connection:
+    def __init__(self, destination_address, transfer_type, protocol, file_name):
+        self.destination_host = destination_address[0]
+        self.destination_port = destination_address[1]
+        self.socket = socket(AF_INET, SOCK_DGRAM)
+        self.file_name = file_name
+        self.protocol = protocol
         self.transfer_type = transfer_type
-        if (args.protocol == STOP_AND_WAIT):
-            self.protocol = StopAndWaitProtocol() # Pasarlo por parametro al ejecutar
-        elif (args.protocol == GO_BACK_N):
-            self.protocol = GoBackNProtocol()
-        else:
-            logging.error(f"{MSG_CLIENT_CREATION_ERROR}")
-            raise ValueError(f"{MSG_CLIENT_CREATION_ERROR}")
-        self.transfer_type = transfer_type
-        self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self, ))
-        self.end_process = Event()
+        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
+        self.end_connection_flag = Event()
         self.thread_manager = Condition()
 
-    def start(self):
-        self.socket.settimeout(TIME_OUT)
-        new_server_address = self.protocol.perform_client_side_handshake(self)
-        self.server_host, self.server_port = new_server_address
-        return
-
-    def upload(self, file_path, filename):
-        
-        communication_queue = []
-
-        thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self, self.thread_manager, communication_queue))
-        thread_receiver.start()
-    
-        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(self, file_path, filename, self.thread_manager, communication_queue))
-        thread_sender.start()
-        return
-    
-    def download(self):
-        complete_file = self.protocol.receive_file(socket)
-        return complete_file
-    
     def close_socket():
         socket.shutdown(SHUT_RDWR)
         socket.close()
@@ -52,12 +24,37 @@ class Client:
     
     def reset_timer(self):
         self.keep_alive_timer.cancel()
-        self.keep_alive_timer = Timer(KEEP_ALIVE, end_process, (self,))
+        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
         self.keep_alive_timer.start()
         return
+
+    def end_connection(self):
+        logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
+        self.keep_alive_timer.cancel()
+        self.end_connection_flag.set()
+        self.thread_manager.acquire()
+        self.thread_manager.notify()
+        self.thread_manager.release()
+        return
+
+class Client(Connection):
+    def start(self):
+        self.socket.settimeout(TIME_OUT)
+        server_address = self.protocol.perform_client_side_handshake(self)
+        self.server_host, self.server_port = server_address
+        return
+
+    def upload(self, file_path, filename):
+        
+        communication_queue = []
+
+        thread_receiver = Thread(target=self.protocol.uploader_receiver_logic, args=(self, communication_queue))
+        thread_receiver.start()
     
-def end_process(client):
-    logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
-    client.keep_alive_timer.cancel()
-    client.end_process.set()
-    return
+        thread_sender = Thread(target=self.protocol.uploader_sender_logic, args=(self, file_path, filename, communication_queue))
+        thread_sender.start()
+        return
+    
+    def download(self):
+        complete_file = self.protocol.receive_file(socket)
+        return complete_file
