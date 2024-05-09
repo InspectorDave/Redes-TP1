@@ -79,7 +79,7 @@ class Protocol:
 
         dedicated_client_socket = socket(AF_INET, SOCK_DGRAM)
         dedicated_client_socket.bind((server.host,0))
-        Protocol.sendInack(dedicated_client_socket, client_address)
+        Protocol.sendInack(dedicated_client_socket, client_address, first_message)
 
         dedicated_client_socket.settimeout(KEEP_ALIVE)
         try: 
@@ -118,10 +118,10 @@ class Protocol:
         server.clients.append(client_address)
 
     @staticmethod
-    def sendInack (dedicatedClientSocket, clientAddress):
+    def sendInack (dedicatedClientSocket, clientAddress, first_message):
         logging.debug(f"{MSG_SENDING_INACK}")
 
-        message = Inack(Protocol.UPLOAD, Protocol.STOP_AND_WAIT)
+        message = Inack(first_message.transfer_type, first_message.protocol_type)
         message_encoded = message.encode()
         dedicatedClientSocket.sendto(message_encoded, clientAddress)
 
@@ -164,6 +164,7 @@ def verify_inack(message, transfer_type, protocol):
     if message.message_type != Message.INACK:
         logging.debug(f"{MSG_IS_NOT_INACK}")
         return False
+    print("INACK transfer type: ", message.transfer_type, " Client transfer type: ", transfer_type)
     if message.transfer_type != transfer_type:
         logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
         return False
