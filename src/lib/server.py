@@ -29,13 +29,12 @@ class Server:
 
         connection = Protocol.perform_server_side_handshake(self, message, clientAddress)
         connection.keep_alive_timer.start()
-        communication_queue = []
 
         connection.socket.settimeout(TIME_OUT)
 
-        thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic, args=(connection, communication_queue, self.storage))
+        thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic, args=(connection, self.storage))
         thread_receiver.start()
-        thread_sender = Thread(target=connection.protocol.downloader_sender_logic, args=(connection, communication_queue))
+        thread_sender = Thread(target=connection.protocol.downloader_sender_logic, args=(connection,))
         thread_sender.start()
 
         return

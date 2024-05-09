@@ -14,6 +14,7 @@ class Connection:
         self.transfer_type = transfer_type
         self.protocol = protocol
         self.thread_manager = Condition()
+        self.sender_receiver_communication_queue = []
         self.end_connection_flag = Event()
         self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)        
 

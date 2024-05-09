@@ -20,14 +20,11 @@ class Client:
         return
 
     def upload(self):
-        
-        communication_queue = []
-
         thread_receiver = Thread(target=self.connection.protocol.uploader_receiver_logic,\
-                                 args=(self.connection, communication_queue))
+                                 args=(self.connection,))
         thread_receiver.start()
         thread_sender = Thread(target=self.connection.protocol.uploader_sender_logic,\
-                               args=(self.connection, self.file_path, communication_queue))
+                               args=(self.connection, self.file_path,))
         thread_sender.start()
         return
     

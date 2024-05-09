@@ -12,9 +12,8 @@ from lib.message import Send, Senack
 class StopAndWaitProtocol(Protocol):
     CODE = 0
 
-    def uploader_sender_logic(self, connection, file_path, communication_queue):
-        logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
-        
+    def uploader_sender_logic(self, connection, file_path):        
+        communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         thread_manager.acquire()
 
@@ -23,6 +22,7 @@ class StopAndWaitProtocol(Protocol):
         file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         
+        logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
         while file_chunk:
 
             message = Send(sequence_number, file_chunk)
@@ -56,8 +56,8 @@ class StopAndWaitProtocol(Protocol):
         thread_manager.release()
         return
 
-    def uploader_receiver_logic(self, connection, communication_queue):
-
+    def uploader_receiver_logic(self, connection):
+        communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
 
         thread_manager.acquire()
@@ -81,8 +81,8 @@ class StopAndWaitProtocol(Protocol):
 
         logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
 
-    def downloader_sender_logic(self, connection, communication_queue:list):
-
+    def downloader_sender_logic(self, connection):
+        communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         thread_manager.acquire()
 
@@ -97,7 +97,8 @@ class StopAndWaitProtocol(Protocol):
         thread_manager.release()
         logging.debug(f"{MSG_DOWNLOADER_SENDING_THREAD_ENDING}")
 
-    def downloader_receiver_logic(self, connection, communication_queue, storage_path):
+    def downloader_receiver_logic(self, connection, storage_path):
+        communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         last_sequence_number = 0
 
