@@ -11,10 +11,6 @@ DEFAULT_UPLOAD_FILE_NAME = 'test_file_2.txt'
 DEFAULT_DOWNLOAD_DST = '../downloads/'
 DEFAULT_DOWNLOAD_FILE_NAME = 'file1.txt'
 
-BUFFER_SIZE = 1024 # Tamanio del mensaje (Debe ser mayor que el header)
-HEADER_SIZE = 11 # Modificar si se agregan campos al header en clase Message
-PAYLOAD_SIZE = (BUFFER_SIZE-HEADER_SIZE) # Tamanio de los datos
-
 RECV_BUFFER_SIZE = 8192
 
 STOP_AND_WAIT = 's'
@@ -30,4 +26,3 @@ TIME_OUT = 1
 KEEP_ALIVE = 4
 
 WINDOW_SIZE = 4
-GO_BACK_N_SEND_BUFFER_SIZE = BUFFER_SIZE * WINDOW_SIZE * 2
