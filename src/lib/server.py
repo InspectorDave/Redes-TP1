@@ -37,7 +37,7 @@ class Server:
         thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic, args=(connection, communication_queue, self.storage))
         thread_receiver.start()
     
-        thread_sender = Thread(target=connection.protocol.downloader_sender_logic, args=(connection.socket, connection.destination_host, connection.destination_port, connection.thread_manager, communication_queue))
+        thread_sender = Thread(target=connection.protocol.downloader_sender_logic, args=(connection, communication_queue))
         thread_sender.start()
 
         return

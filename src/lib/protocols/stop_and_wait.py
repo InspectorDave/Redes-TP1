@@ -79,13 +79,15 @@ class StopAndWaitProtocol(Protocol):
 
         logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
 
-    def downloader_sender_logic(self, socket:socket, host, port, thread_manager:Condition, communication_queue:list):
+    def downloader_sender_logic(self, connection, communication_queue:list):
+
+        thread_manager = connection.thread_manager
         thread_manager.acquire()
 
         while True:
             thread_manager.wait()
             message = communication_queue.pop(0)
-            self.send_message(socket, host, port, message)
+            self.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}")
 
     def downloader_receiver_logic(self, connection, communication_queue, storage_path):
