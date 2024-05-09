@@ -20,16 +20,19 @@ class GoBackN(Protocol):
         thread_manager.acquire()
 
         sequence_number = random.randint(1, 1023)
+        last_sent_sequence_number = sequence_number
+        last_received_ack_number = 0
 
         file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
         messages_not_ackd = []
         
         logging.info(f"{MSG_SENDING_FILE_USING_GO_BACK_N}")
-        while file_chunk:
+        while file_chunk or last_sent_sequence_number != last_received_ack_number:
 
             while len(messages_not_ackd) < WINDOW_SIZE and file_chunk:
                 message = Send(sequence_number, file_chunk)
+                last_sent_sequence_number = sequence_number
                 messages_not_ackd.append(message)
                 sequence_number += 1
                 sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
@@ -45,6 +48,7 @@ class GoBackN(Protocol):
             while len(communication_queue) > 0:
                 received_message = communication_queue.pop(0)
                 if received_message.ack_number >= messages_not_ackd[0].sequence_number:
+                    last_received_ack_number = received_message.ack_number
                     messages_not_ackd.pop(0)
             
             connection.reset_timer()

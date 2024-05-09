@@ -19,15 +19,18 @@ class StopAndWaitProtocol(Protocol):
         thread_manager.acquire()
 
         sequence_number = random.randint(1, 1023)
+        last_sent_sequence_number = sequence_number
+        last_received_ack_number = 0
 
         file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
         
         logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
-        while file_chunk:
+        while file_chunk or last_sent_sequence_number != last_received_ack_number:
 
             message = Send(sequence_number, file_chunk)
             sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+            last_sent_sequence_number = sequence_number
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
             logging.debug(f"{MSG_BYTES_SENT} {sent}")
             thread_manager.notify()
@@ -46,6 +49,7 @@ class StopAndWaitProtocol(Protocol):
 
             if received_message.ack_number == sequence_number:
                 sequence_number += 1
+                last_received_ack_number = received_message.ack_number
                 file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
 
         if file_chunk != True:
