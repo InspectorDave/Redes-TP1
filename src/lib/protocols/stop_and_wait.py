@@ -125,8 +125,5 @@ class StopAndWaitProtocol(Protocol):
             thread_manager.notify()
             thread_manager.release()
 
+        file_manager.close()
         logging.debug(f"{MSG_DOWNLOADER_RECEIVER_THREAD_ENDING}")
-        #finally:
-        #print("CLOSING FILE")
-        #print("FILE: ", file_manager.file)
-        #file_manager.close()

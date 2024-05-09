@@ -132,4 +132,3 @@ class GoBackN(Protocol):
 
         file_manager.close()
         logging.debug(f"{MSG_DOWNLOADER_RECEIVER_THREAD_ENDING}")
-
