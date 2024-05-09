@@ -33,17 +33,24 @@ class GoBackN(Protocol):
         
         while file_chunk or len(messages_not_ackd) != 0:
             while file_chunk and len(messages_not_ackd) < WINDOW_SIZE:
+
                 message = Send(last_sent_sequence_number, file_chunk)
+
                 sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+                logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
+                logging.debug(f"{MSG_BYTES_SENT} {sent}")
+
                 messages_not_ackd.append(message)
                 last_sent_sequence_number += 1
                 file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
 
             if resend_window_flag.is_set():
                 for message in messages_not_ackd:
+
                     sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
                     logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
                     logging.debug(f"{MSG_BYTES_SENT} {sent}")
+
                 resend_window_flag.clear()
 
             thread_manager.notify()
@@ -57,10 +64,9 @@ class GoBackN(Protocol):
                 while len(messages_not_ackd) > 0 and received_message.ack_number >= messages_not_ackd[0].sequence_number:
                     GoBackN.reset_timer(resend_window_timer, resend_window_flag)
                     messages_not_ackd.pop(0)
-            
-            connection.reset_timer()
+                    connection.reset_timer()
 
-        if file_chunk != True:
+        if not file_chunk:
             logging.info(f"{MSG_FILE_SENT}")
         logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
