@@ -31,7 +31,6 @@ class Server:
 
         connection = Protocol.perform_server_side_handshake(self, message, clientAddress)
         connection.keep_alive_timer.start()
-
         communication_queue = []
 
         connection.socket.settimeout(TIME_OUT)

@@ -43,5 +43,6 @@ MSG_DOWNLOADER_SENDING_THREAD_ENDING = "Downloader sender thread ending"
 MSG_DOWNLOADER_RECEIVER_THREAD_ENDING = "Downloader receiver thread ending"
 MSG_ESTABLISHED_NOT_RECEIVED = "ESTABLISHED message not received"
 MSG_FILE_SENT = "File sent"
+MSG_CLIENT_CREATION_ERROR = "Client creation error"
 
 ERR_INVALIDAD_PROTOCOL = "Invalid protocol"
