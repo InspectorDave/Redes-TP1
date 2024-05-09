@@ -5,9 +5,7 @@ import logging
 from lib.constants import *
 from lib.message import *
 from lib.protocols.protocol import Protocol
-
 from lib.logging_msg import *
-from lib.client import Connection
 
 class Server:
     def __init__(self, host, port, args):
@@ -31,14 +29,27 @@ class Server:
 
         connection = Protocol.perform_server_side_handshake(self, message, clientAddress)
         connection.keep_alive_timer.start()
-        communication_queue = []
 
         connection.socket.settimeout(TIME_OUT)
 
-        thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic, args=(connection, communication_queue, self.storage))
-        thread_receiver.start()
-    
-        thread_sender = Thread(target=connection.protocol.downloader_sender_logic, args=(connection, communication_queue))
-        thread_sender.start()
-
+        match connection.transfer_type:
+            case Protocol.UPLOAD:
+            # The server is the downloader
+                logging.info(f"{MSG_DOWNLOADING_FILE}")
+                thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic,\
+                                         args=(connection, self.storage))
+                thread_receiver.start()
+                thread_sender = Thread(target=connection.protocol.downloader_sender_logic,\
+                                       args=(connection,))
+                thread_sender.start()
+                return
+            case Protocol.DOWNLOAD:
+            # The server is the uploader
+                logging.info(f"{MSG_UPLOADING_FILE}")
+                thread_receiver = Thread(target=connection.protocol.uploader_receiver_logic,\
+                                         args=(connection,))
+                thread_receiver.start()
+                thread_sender = Thread(target=connection.protocol.uploader_sender_logic,\
+                                       args=(connection, self.storage))
+                thread_sender.start()
         return

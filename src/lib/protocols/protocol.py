@@ -16,7 +16,8 @@ class Protocol:
 
     # Recibe un socket, host, port y mensaje a enviar,
     # lo codifica y lo envia
-    def send_message(self, client_socket:socket, host, port, message:Message):
+    @staticmethod
+    def send_message(client_socket:socket, host, port, message:Message):
         message_bytes = message.encode()
         sent = client_socket.sendto(message_bytes, (host, port))
         return sent
@@ -34,36 +35,31 @@ class Protocol:
         raise NotImplementedError(f"{MSG_RECEIVE_FILE_METHOD_NOT_IMPLEMENTED}")
 
     # El receive solo se ocupa de recibir un paquete y decodificarlo
-    def receive(self, client_socket:socket):
-
+    @staticmethod
+    def receive(client_socket:socket):
         message, serverAddress = Protocol.decode_received_message(client_socket)
         return message, serverAddress
     
-    def send_ack(self):
-        return
-    
-    def receive_ack(self):
-        return
-    
-    def perform_client_side_handshake(self, client):
+    @staticmethod
+    def perform_client_side_handshake(connection):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
-        client.reset_timer()
+        connection.reset_timer()
 
         while True:
-            message = Initiate(client.transfer_type, client.protocol.CODE)
-            self.send_initiate(client.socket, client.destination_host, client.destination_port, message)
+            message = Initiate(connection.transfer_type, connection.protocol.CODE)
+            Protocol.send_initiate(connection.socket, connection.destination_host, connection.destination_port, message)
 
             try:
-                decoded_message, downloader_address = self.decode_received_message(client.socket)
+                decoded_message, downloader_address = Protocol.decode_received_message(connection.socket)
             except TimeoutError:
-                if client.end_connection_flag.is_set():
+                if connection.end_connection_flag.is_set():
                     exit()
                 continue
-            client.reset_timer()
-            if verify_inack(decoded_message, client.transfer_type, client.protocol.CODE):
+            connection.reset_timer()
+            if Protocol.verify_inack(decoded_message, connection.transfer_type, connection.protocol.CODE):
                 break
 
-        self.send_established(client.socket, downloader_address[0], downloader_address[1], client.file_name)
+        Protocol.send_established(connection.socket, downloader_address[0], downloader_address[1], connection.file_name)
 
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return downloader_address
@@ -79,7 +75,7 @@ class Protocol:
 
         dedicated_client_socket = socket(AF_INET, SOCK_DGRAM)
         dedicated_client_socket.bind((server.host,0))
-        Protocol.sendInack(dedicated_client_socket, client_address)
+        Protocol.sendInack(dedicated_client_socket, client_address, first_message)
 
         dedicated_client_socket.settimeout(KEEP_ALIVE)
         try: 
@@ -101,9 +97,10 @@ class Protocol:
         logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return connection
 
-    def send_initiate(self, socket, host, port, message):
+    @staticmethod
+    def send_initiate(socket, host, port, message):
         logging.info(f"{MSG_SENDING_INITIATE}")
-        self.send_message(socket, host, port, message)
+        Protocol.send_message(socket, host, port, message)
         return
     
     @staticmethod
@@ -118,18 +115,19 @@ class Protocol:
         server.clients.append(client_address)
 
     @staticmethod
-    def sendInack (dedicatedClientSocket, clientAddress):
+    def sendInack (dedicatedClientSocket, clientAddress, first_message):
         logging.debug(f"{MSG_SENDING_INACK}")
 
-        message = Inack(Protocol.UPLOAD, Protocol.STOP_AND_WAIT)
+        message = Inack(first_message.transfer_type, first_message.protocol_type)
         message_encoded = message.encode()
         dedicatedClientSocket.sendto(message_encoded, clientAddress)
 
         logging.debug(f"{MSG_SENT_INACK}")
         return
 
-    def receive_inack(self, socket, host, port):
-        message_decoded, server_address = self.receive(socket)
+    @staticmethod
+    def receive_inack(socket, host, port):
+        message_decoded, server_address = Protocol.receive(socket)
 
         if message_decoded.message_type != Message.INACK:
             logging.debug(f"{MSG_IS_NOT_INACK}")
@@ -139,11 +137,12 @@ class Protocol:
 
         return server_address
 
-    def send_established(self, socket, host, port, filename):
+    @staticmethod
+    def send_established(socket, host, port, filename):
         logging.info(f"{MSG_SENDING_ESTABLISHED}")
         logging.debug(f"{MSG_FILE_NAME} {filename}")
         message = Established(filename)
-        self.send_message(socket, host, port, message)
+        Protocol.send_message(socket, host, port, message)
         return
 
     @staticmethod
@@ -159,16 +158,18 @@ class Protocol:
         logging.debug(f"{MSG_BYTES_RECEIVED} {len(rest_of_message) + len(fixed_header)}")
 
         return decoded_message, clientAddress
-
-def verify_inack(message, transfer_type, protocol):
-    if message.message_type != Message.INACK:
-        logging.debug(f"{MSG_IS_NOT_INACK}")
-        return False
-    if message.transfer_type != transfer_type:
-        logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
-        return False
-    if message.protocol_type != protocol:
-        logging.debug(f"{MSG_PROTOCOL_NOT_MATCH}")
-        return False
-    logging.debug(f"{MSG_RECEIVED_INACK}")
-    return True
+    
+    @staticmethod
+    def verify_inack(message, transfer_type, protocol):
+        if message.message_type != Message.INACK:
+            logging.debug(f"{MSG_IS_NOT_INACK}")
+            return False
+        print("INACK transfer type: ", message.transfer_type, " Client transfer type: ", transfer_type)
+        if message.transfer_type != transfer_type:
+            logging.debug(f"{MSG_TRANSFER_TYPE_NOT_MATCH}")
+            return False
+        if message.protocol_type != protocol:
+            logging.debug(f"{MSG_PROTOCOL_NOT_MATCH}")
+            return False
+        logging.debug(f"{MSG_RECEIVED_INACK}")
+        return True

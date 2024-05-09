@@ -1,6 +1,5 @@
 from lib.constants import *
 import struct
-import random
 
 class Message:
     FIXED_HEADER_SIZE = 1

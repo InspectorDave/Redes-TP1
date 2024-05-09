@@ -12,21 +12,21 @@ from lib.message import Send, Senack
 class StopAndWaitProtocol(Protocol):
     CODE = 0
 
-    def uploader_sender_logic(self, connection, file_path, filename, communication_queue):
-        logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
-        
+    def uploader_sender_logic(self, connection, file_path):        
+        communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         thread_manager.acquire()
 
         sequence_number = random.randint(1, 1023)
 
-        file_manager = FileManager(FILE_MODE_READ, file_path, filename)
+        file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
         
+        logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
         while file_chunk:
 
             message = Send(sequence_number, file_chunk)
-            sent = self.send_message(connection.socket, connection.server_host, connection.server_port, message)
+            sent = self.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
             logging.debug(f"{MSG_BYTES_SENT} {sent}")
             thread_manager.notify()
@@ -56,8 +56,8 @@ class StopAndWaitProtocol(Protocol):
         thread_manager.release()
         return
 
-    def uploader_receiver_logic(self, connection, communication_queue):
-
+    def uploader_receiver_logic(self, connection):
+        communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
 
         thread_manager.acquire()
@@ -68,7 +68,7 @@ class StopAndWaitProtocol(Protocol):
             try:
                 decoded_message, downloader_address = self.decode_received_message(connection.socket)
             except TimeoutError:
-                self.wake_up_threads(thread_manager)
+                connection.wake_up_threads()
                 if connection.end_connection_flag.is_set():
                     break
                 continue
@@ -81,8 +81,8 @@ class StopAndWaitProtocol(Protocol):
 
         logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
 
-    def downloader_sender_logic(self, connection, communication_queue:list):
-
+    def downloader_sender_logic(self, connection):
+        communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         thread_manager.acquire()
 
@@ -97,7 +97,8 @@ class StopAndWaitProtocol(Protocol):
         thread_manager.release()
         logging.debug(f"{MSG_DOWNLOADER_SENDING_THREAD_ENDING}")
 
-    def downloader_receiver_logic(self, connection, communication_queue, storage_path):
+    def downloader_receiver_logic(self, connection, storage_path):
+        communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         last_sequence_number = 0
 
@@ -125,9 +126,3 @@ class StopAndWaitProtocol(Protocol):
         #print("CLOSING FILE")
         #print("FILE: ", file_manager.file)
         #file_manager.close()
-
-    def wake_up_threads(self, thread_manager):
-        thread_manager.acquire()
-        thread_manager.notify()
-        thread_manager.release()
-        return

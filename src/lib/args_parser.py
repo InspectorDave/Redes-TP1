@@ -2,7 +2,6 @@ import argparse
 from lib.constants import *
 import os
 
-
 def parse_server_arguments():
     parser = argparse.ArgumentParser(prog='start-server.py', description='<command description>')
     group_verbosity = parser.add_mutually_exclusive_group(required=False)
@@ -46,9 +45,8 @@ def parse_server_arguments():
 
 def _verify_server_arguments(args):
     if not os.path.exists(args.storage):
-        raise FileNotFoundError(f"Directory '{args.storage}' does not exist.")
+        os.mkdir(args.storage)
     return
-
 
 def parse_upload_arguments():
     parser = argparse.ArgumentParser(prog='upload.py', description='<command description>')
@@ -121,7 +119,7 @@ def parse_download_arguments():
 
 def _verify_download_arguments(args):
     if not os.path.exists(args.dst):
-        raise FileNotFoundError(f"Directory '{args.dst}' does not exist.")
+        os.mkdir(args.dst)
     if args.protocol != 's' and args.protocol != 'g':
         raise Exception(f"Incorrect protocol. Try using 's' for Stop And Wait or 'g' for Go Back N")
     return
