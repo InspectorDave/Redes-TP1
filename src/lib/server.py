@@ -5,9 +5,7 @@ import logging
 from lib.constants import *
 from lib.message import *
 from lib.protocols.protocol import Protocol
-
 from lib.logging_msg import *
-from lib.client import Connection
 
 class Server:
     def __init__(self, host, port, args):

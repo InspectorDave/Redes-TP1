@@ -2,7 +2,6 @@ import argparse
 from lib.constants import *
 import os
 
-
 def parse_server_arguments():
     parser = argparse.ArgumentParser(prog='start-server.py', description='<command description>')
     group_verbosity = parser.add_mutually_exclusive_group(required=False)
