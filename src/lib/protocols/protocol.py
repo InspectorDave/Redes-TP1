@@ -70,7 +70,8 @@ class Protocol:
 
     @staticmethod
     def perform_server_side_handshake(server, first_message, client_address):
-        
+        logging.info(f"{MSG_HANDSHAKE_STARTING}")
+
         Protocol.process_initiate(first_message, client_address, server)
         
         from lib.protocols.protocol_factory import ProtocolFactory
@@ -97,10 +98,11 @@ class Protocol:
         dedicated_client_socket.settimeout(None)
         connection.socket = dedicated_client_socket
 
+        logging.info(f"{MSG_HANDSHAKE_COMPLETED}")
         return connection
 
     def send_initiate(self, socket, host, port, message):
-        logging.info(f"[LOG] Sending INITIATE")
+        logging.info(f"{MSG_SENDING_INITIATE}")
         self.send_message(socket, host, port, message)
         return
     

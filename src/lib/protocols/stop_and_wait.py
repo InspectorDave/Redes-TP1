@@ -47,6 +47,8 @@ class StopAndWaitProtocol(Protocol):
                 sequence_number += 1
                 file_chunk = file_manager.read_file_bytes(PAYLOAD_SIZE)
 
+        if file_chunk != True:
+            logging.info(f"{MSG_FILE_SENT}")
         logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
         connection.end_connection_flag.set()
@@ -86,9 +88,14 @@ class StopAndWaitProtocol(Protocol):
 
         while True:
             thread_manager.wait()
+            if connection.end_connection_flag.is_set():
+                break
             message = communication_queue.pop(0)
             self.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}")
+
+        thread_manager.release()
+        logging.debug(f"{MSG_DOWNLOADER_SENDING_THREAD_ENDING}")
 
     def downloader_receiver_logic(self, connection, communication_queue, storage_path):
         thread_manager = connection.thread_manager
@@ -96,24 +103,28 @@ class StopAndWaitProtocol(Protocol):
 
         logging.debug(f"{MSG_STORAGE_PATH} {storage_path}")
         file_manager = FileManager(FILE_MODE_WRITE, storage_path, connection.file_name)
-        while True:
+        while connection.end_connection_flag.is_set() == False:
             try: #Para poder hacer que se cierre el archivo en el finally
                 decoded_message, client_address = self.decode_received_message(connection.socket)
-                thread_manager.acquire()
-                if last_sequence_number == decoded_message.sequence_number - 1 or last_sequence_number == 0:
-                    file_manager.write_file_bytes(decoded_message.payload)
-                    logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path + connection.file_name}")
-                last_sequence_number = decoded_message.sequence_number
-                message_ack = Senack(decoded_message.sequence_number + 1)
-                communication_queue.append(message_ack)
-                thread_manager.notify()
-                thread_manager.release()
-            except Exception as e:
-                raise Exception(f"Error: {e}")
-            #finally:
-                #print("CLOSING FILE")
-                #print("FILE: ", file_manager.file)
-                #file_manager.close()
+            except TimeoutError:
+                continue
+
+            thread_manager.acquire()
+            connection.reset_timer()
+            if last_sequence_number == decoded_message.sequence_number - 1 or last_sequence_number == 0:
+                file_manager.write_file_bytes(decoded_message.payload)
+                logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path + connection.file_name}")
+            last_sequence_number = decoded_message.sequence_number
+            message_ack = Senack(decoded_message.sequence_number + 1)
+            communication_queue.append(message_ack)
+            thread_manager.notify()
+            thread_manager.release()
+
+        logging.debug(f"{MSG_DOWNLOADER_RECEIVER_THREAD_ENDING}")
+        #finally:
+        #print("CLOSING FILE")
+        #print("FILE: ", file_manager.file)
+        #file_manager.close()
 
     def wake_up_threads(self, thread_manager):
         thread_manager.acquire()

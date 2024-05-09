@@ -32,6 +32,9 @@ class Connection:
         logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
         self.keep_alive_timer.cancel()
         self.end_connection_flag.set()
+        self.thread_manager.acquire()
+        self.thread_manager.notify()
+        self.thread_manager.release()
         return
 
 class Client(Connection):
