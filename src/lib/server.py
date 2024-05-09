@@ -28,7 +28,7 @@ class Server:
         logging.info(f"{MSG_PROCESSING_NEW_CONNECTION}")
 
         connection = Protocol.perform_server_side_handshake(self, message, clientAddress)
-        connection.keep_alive_timer.start()
+        connection.timeout_timer.start()
 
         connection.socket.settimeout(TIME_OUT)
 

@@ -16,7 +16,8 @@ class Connection:
         self.thread_manager = Condition()
         self.sender_receiver_communication_queue = []
         self.end_connection_flag = Event()
-        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)        
+        self.timeout_time = IDLE_TIMEOUT
+        self.timeout_timer = Timer(self.timeout_time, self.end_connection)
     
     def wake_up_threads(self):
         self.thread_manager.acquire()
@@ -25,14 +26,14 @@ class Connection:
         return
 
     def reset_timer(self):
-        self.keep_alive_timer.cancel()
-        self.keep_alive_timer = Timer(KEEP_ALIVE, self.end_connection)
-        self.keep_alive_timer.start()
+        self.timeout_timer.cancel()
+        self.timeout_timer = Timer(self.timeout_time, self.end_connection)
+        self.timeout_timer.start()
         return
 
     def end_connection(self):
         logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
-        self.keep_alive_timer.cancel()
+        self.timeout_timer.cancel()
         self.end_connection_flag.set()
         self.wake_up_threads()
         return

@@ -49,5 +49,6 @@ MSG_UPLOADING_FILE = "Starting file upload"
 MSG_SENDING_FILE_USING_GO_BACK_N = "Sending file using Go Back N Protocol"
 MSG_WITH_PROTOCOL = "with protocol"
 MSG_CONNECTION_ENDED = "Connection ended"
+MSG_RESENDING_WINDOW = "Resending Go Back N window"
 
 ERR_INVALIDAD_PROTOCOL = "Invalid protocol"
