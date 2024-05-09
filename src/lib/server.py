@@ -32,9 +32,24 @@ class Server:
 
         connection.socket.settimeout(TIME_OUT)
 
-        thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic, args=(connection, self.storage))
-        thread_receiver.start()
-        thread_sender = Thread(target=connection.protocol.downloader_sender_logic, args=(connection,))
-        thread_sender.start()
-
+        match connection.transfer_type:
+            case Protocol.UPLOAD:
+            # The server is the downloader
+                logging.info(f"{MSG_DOWNLOADING_FILE}")
+                thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic,\
+                                         args=(connection, self.storage))
+                thread_receiver.start()
+                thread_sender = Thread(target=connection.protocol.downloader_sender_logic,\
+                                       args=(connection,))
+                thread_sender.start()
+                return
+            case Protocol.DOWNLOAD:
+            # The server is the uploader
+                logging.info(f"{MSG_UPLOADING_FILE}")
+                thread_receiver = Thread(target=connection.protocol.uploader_receiver_logic,\
+                                         args=(connection,))
+                thread_receiver.start()
+                thread_sender = Thread(target=connection.protocol.uploader_sender_logic,\
+                                       args=(connection, self.storage))
+                thread_sender.start()
         return

@@ -1,5 +1,6 @@
 from lib.args_parser import parse_download_arguments
 from lib.client import Client
+from lib.connection import Connection
 from lib.constants import *
 from lib.file_manager import *
 from lib.log import prepare_logging
@@ -10,6 +11,7 @@ if __name__ == "__main__":
     args = parse_download_arguments()
     prepare_logging(args)
     protocol = ProtocolFactory.create_from_arguments(args.protocol)
-    client = Client((args.host, args.port), Protocol.DOWNLOAD, protocol, args.name)
+    connection = Connection((args.host, args.port), Protocol.DOWNLOAD, protocol, args.name)
+    client = Client(connection, args.dst)
     client.start()
-    client.download(args.dst, args.name)
+    client.download()

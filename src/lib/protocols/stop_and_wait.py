@@ -26,7 +26,7 @@ class StopAndWaitProtocol(Protocol):
         while file_chunk:
 
             message = Send(sequence_number, file_chunk)
-            sent = self.send_message(connection.socket, connection.server_host, connection.server_port, message)
+            sent = self.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
             logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
             logging.debug(f"{MSG_BYTES_SENT} {sent}")
             thread_manager.notify()
