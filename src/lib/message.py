@@ -103,7 +103,6 @@ class Established(Message):
             "!B", self.message_type) + \
             struct.pack("!H", filename_length) + \
             filename_bytes
-        # return struct.pack("!B", self.message_type)
 
     @staticmethod
     def decode_after_fixed_header(data):
@@ -111,7 +110,6 @@ class Established(Message):
         filename_bytes = data[2:2 + filename_length]
         filename = filename_bytes.decode('utf-8')
         return Established(filename)
-        # return Established()
 
 
 class Send(Message):
@@ -119,7 +117,7 @@ class Send(Message):
     PAYLOAD_SIZE = 1000
     MESSAGE_SIZE = Message.FIXED_HEADER_SIZE + \
         VARIABLE_HEADER_SIZE + \
-        PAYLOAD_SIZE    # message_type + sequence_number + payload
+        PAYLOAD_SIZE
 
     def __init__(self, sequence_number, payload):
         self.message_type = Message.SEND
