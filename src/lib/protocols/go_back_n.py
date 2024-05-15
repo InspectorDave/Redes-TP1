@@ -65,8 +65,9 @@ class GoBackN(Protocol):
                                   f"{MSG.MSG_WITH_SEQUENCE_N} "
                                   f"{str(message.sequence_number)}")
 
+                resend_window_timer = GoBackN.reset_timer(
+                    resend_window_timer, resend_window_flag)
                 resend_window_flag.clear()
-                GoBackN.reset_timer(resend_window_timer, resend_window_flag)
 
             thread_manager.wait()
 
@@ -79,10 +80,8 @@ class GoBackN(Protocol):
                 while (len(messages_not_ackd) > 0 and
                        received_message.ack_number >=
                        messages_not_ackd[0].sequence_number):
-                    if received_message.ack_number ==\
-                       messages_not_ackd[0].sequence_number:
-                        GoBackN.reset_timer(resend_window_timer,
-                                            resend_window_flag)
+                    resend_window_timer = GoBackN.reset_timer(
+                        resend_window_timer, resend_window_flag)
                     messages_not_ackd.pop(0)
 
         if not file_chunk:
@@ -92,6 +91,7 @@ class GoBackN(Protocol):
         connection.end_connection_flag.set()
         connection.timeout_timer.cancel()
         thread_manager.release()
+
         return
 
     @staticmethod
@@ -104,8 +104,6 @@ class GoBackN(Protocol):
         thread_manager.release()
 
         while True:
-            # if connection.end_connection_flag.is_set():
-            #     break
             try:
                 buffer = connection.socket.recvfrom(CONST.RECV_BUFFER_SIZE)[0]
             except TimeoutError:
@@ -115,8 +113,8 @@ class GoBackN(Protocol):
                 continue
             thread_manager.acquire()
             while len(buffer) > 0:
-                # if connection.end_connection_flag.is_set():
-                #     break
+                if connection.end_connection_flag.is_set():
+                    break
                 connection.reset_timer()
                 decoded_message, buffer = \
                     Protocol.decode_message_from_buffer(buffer)
@@ -207,3 +205,4 @@ class GoBackN(Protocol):
         timer = Timer(CONST.TIME_OUT, GoBackN.resend_window_timer,
                       args=(resend_window_flag,))
         timer.start()
+        return timer
