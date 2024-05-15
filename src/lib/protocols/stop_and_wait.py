@@ -9,11 +9,12 @@ from lib.logging_msg import *
 from lib.constants import *
 from lib.message import Send, Senack
 
+
 class StopAndWaitProtocol(Protocol):
     CODE = 0
 
     @staticmethod
-    def uploader_sender_logic(connection, file_path):        
+    def uploader_sender_logic(connection, file_path):
         communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         thread_manager.acquire()
@@ -24,14 +25,14 @@ class StopAndWaitProtocol(Protocol):
 
         file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
-        
+
         logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
         while file_chunk or last_sent_sequence_number != last_received_ack_number:
 
             message = Send(sequence_number, file_chunk)
-            sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+            Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
             last_sent_sequence_number = sequence_number
-            logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
+            logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}")
             thread_manager.notify()
             thread_manager.wait()
 
@@ -79,7 +80,7 @@ class StopAndWaitProtocol(Protocol):
                 continue
 
             thread_manager.acquire()
-            logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_ACK_N} {str(decoded_message.ack_number)}" )
+            logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_ACK_N} {str(decoded_message.ack_number)}")
             communication_queue.append(decoded_message)
             thread_manager.notify()
             thread_manager.release()
@@ -111,7 +112,7 @@ class StopAndWaitProtocol(Protocol):
 
         logging.debug(f"{MSG_STORAGE_PATH} {storage_path}")
         file_manager = FileManager(FILE_MODE_WRITE, storage_path, connection.file_name)
-        while connection.end_connection_flag.is_set() == False:
+        while connection.end_connection_flag.is_set() is False:
             try:
                 decoded_message, client_address = Protocol.decode_received_message(connection.socket)
             except TimeoutError:

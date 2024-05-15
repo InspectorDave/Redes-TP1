@@ -5,6 +5,7 @@ import logging
 from lib.constants import *
 from lib.logging_msg import *
 
+
 class Connection:
     def __init__(self, destination_address, transfer_type, protocol, file_name):
         self.destination_host = destination_address[0]
@@ -18,7 +19,7 @@ class Connection:
         self.end_connection_flag = Event()
         self.timeout_time = IDLE_TIMEOUT
         self.timeout_timer = Timer(self.timeout_time, self.end_connection)
-    
+
     def wake_up_threads(self):
         self.thread_manager.acquire()
         self.thread_manager.notify()

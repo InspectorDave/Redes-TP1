@@ -7,6 +7,7 @@ import logging
 from lib.logging_msg import *
 from lib.client import Connection
 
+
 class Protocol:
 
     UPLOAD = 0
@@ -17,17 +18,17 @@ class Protocol:
     # Recibe un socket, host, port y mensaje a enviar,
     # lo codifica y lo envia
     @staticmethod
-    def send_message(client_socket:socket, host, port, message:Message):
+    def send_message(client_socket: socket, host, port, message: Message):
         message_bytes = message.encode()
         sent = client_socket.sendto(message_bytes, (host, port))
         return sent
 
     # El receive solo se ocupa de recibir un paquete y decodificarlo
     @staticmethod
-    def receive(client_socket:socket):
+    def receive(client_socket: socket):
         message, serverAddress = Protocol.decode_received_message(client_socket)
         return message, serverAddress
-    
+
     @staticmethod
     def perform_client_side_handshake(connection):
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
@@ -57,22 +58,22 @@ class Protocol:
         logging.info(f"{MSG_HANDSHAKE_STARTING}")
 
         Protocol.process_initiate(first_message, client_address, server)
-        
+
         from lib.protocols.protocol_factory import ProtocolFactory
         session_protocol = ProtocolFactory.create(first_message.protocol_type)
 
         dedicated_client_socket = socket(AF_INET, SOCK_DGRAM)
-        dedicated_client_socket.bind((server.host,0))
+        dedicated_client_socket.bind((server.host, 0))
         Protocol.sendInack(dedicated_client_socket, client_address, first_message)
 
         dedicated_client_socket.settimeout(IDLE_TIMEOUT)
-        try: 
+        try:
             established_message, client_address = Protocol.decode_received_message(dedicated_client_socket)
         except TimeoutError:
             logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
             logging.warn(f"{MSG_ESTABLISHED_NOT_RECEIVED}")
             exit()
-        
+
         if established_message.message_type != Message.ESTABLISHED:
             logging.debug(f"{MSG_IS_NOT_ESTABLISHED}")
             exit()
@@ -90,7 +91,7 @@ class Protocol:
         logging.info(f"{MSG_SENDING_INITIATE}")
         Protocol.send_message(socket, host, port, message)
         return
-    
+
     @staticmethod
     def process_initiate(first_message, client_address, server):
         if first_message.message_type != Message.INITIATE:
@@ -103,7 +104,7 @@ class Protocol:
         server.clients.append(client_address)
 
     @staticmethod
-    def sendInack (dedicatedClientSocket, clientAddress, first_message):
+    def sendInack(dedicatedClientSocket, clientAddress, first_message):
         logging.debug(f"{MSG_SENDING_INACK}")
 
         message = Inack(first_message.transfer_type, first_message.protocol_type)
@@ -148,7 +149,7 @@ class Protocol:
         return
 
     @staticmethod
-    def decode_received_message(socket:socket):
+    def decode_received_message(socket: socket):
         recv_buffer, clientAddress = socket.recvfrom(RECV_BUFFER_SIZE)
         fixed_header = recv_buffer[:Message.FIXED_HEADER_SIZE]
         recv_buffer = recv_buffer[Message.FIXED_HEADER_SIZE:]
@@ -157,7 +158,7 @@ class Protocol:
         decoded_message = Decoder.decode_after_fixed_header(message_type, rest_of_message)
 
         return decoded_message, clientAddress
-    
+
     @staticmethod
     def decode_message_from_buffer(buffer):
         fixed_header = buffer[:Message.FIXED_HEADER_SIZE]

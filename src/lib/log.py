@@ -9,6 +9,7 @@ error_format = logging.Formatter(f"{RED}[%(levelname)s]{WHITE}- %(message)s")
 info_format = logging.Formatter(f"{GREEN}[%(levelname)s]{WHITE}- %(message)s")
 debug_format = logging.Formatter(f"{BLUE}[%(levelname)s]{WHITE}- %(message)s")
 
+
 class OwnFormatter(logging.Formatter):
 
     def format(self, record):
@@ -22,6 +23,7 @@ class OwnFormatter(logging.Formatter):
 
 stdout_handler = logging.StreamHandler()
 stdout_handler.setFormatter(OwnFormatter())
+
 
 def prepare_logging(args):
     def level_verbosity():

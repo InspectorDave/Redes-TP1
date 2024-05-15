@@ -7,13 +7,14 @@ from lib.message import *
 from lib.protocols.protocol import Protocol
 from lib.logging_msg import *
 
+
 class Server:
     def __init__(self, host, port, args):
         self.host = host
         self.port = port
         self.clients = []
         self.storage = args.storage
-    
+
     def start(self):
         serverSocket = socket(AF_INET, SOCK_DGRAM)
         serverSocket.bind((self.host, self.port))
@@ -37,18 +38,18 @@ class Server:
 
         match connection.transfer_type:
             case Protocol.UPLOAD:
-            # The server is the downloader
+                # The server is the downloader
                 logging.info(f"{MSG_DOWNLOADING_FILE} {MSG_WITH_PROTOCOL} {connection.protocol.__class__.__name__}")
-                thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic,\
+                thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic,
                                          args=(connection, self.storage))
-                thread_sender = Thread(target=connection.protocol.downloader_sender_logic,\
+                thread_sender = Thread(target=connection.protocol.downloader_sender_logic,
                                        args=(connection,))
             case Protocol.DOWNLOAD:
-            # The server is the uploader
+                # The server is the uploader
                 logging.info(f"{MSG_UPLOADING_FILE} {MSG_WITH_PROTOCOL} {connection.protocol.__class__.__name__}")
-                thread_receiver = Thread(target=connection.protocol.uploader_receiver_logic,\
+                thread_receiver = Thread(target=connection.protocol.uploader_receiver_logic,
                                          args=(connection,))
-                thread_sender = Thread(target=connection.protocol.uploader_sender_logic,\
+                thread_sender = Thread(target=connection.protocol.uploader_sender_logic,
                                        args=(connection, self.storage))
 
         thread_receiver.start()
@@ -56,5 +57,5 @@ class Server:
         thread_sender.join()
         thread_receiver.join()
         self.clients.remove(clientAddress)
-        logging.info(f"{MSG_CONNECTION_ENDED}")               
+        logging.info(f"{MSG_CONNECTION_ENDED}")
         return

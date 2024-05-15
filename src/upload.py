@@ -19,4 +19,3 @@ if __name__ == "__main__":
     client = Client(connection, args.src)
     client.start()
     client.upload()
-    
