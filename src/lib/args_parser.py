@@ -1,5 +1,5 @@
 import argparse
-from lib.constants import *
+import lib.constants as CONST
 import os
 
 
@@ -20,14 +20,14 @@ def parse_server_arguments():
     parser.add_argument('-H',
                         '--host',  # Nombre de la variable
                         metavar='ADDR',  # Cómo se muestra al hacer -h
-                        default=DEFAULT_HOST,
+                        default=CONST.DEFAULT_HOST,
                         action='store',
                         type=str,
                         help='service IP address')
 
     parser.add_argument('-p',
                         '--port',
-                        default=DEFAULT_PORT,
+                        default=CONST.DEFAULT_PORT,
                         action='store',
                         type=int,
                         help='service port')
@@ -35,7 +35,7 @@ def parse_server_arguments():
     parser.add_argument('-s',
                         '--storage',
                         metavar='DIRPATH',
-                        default=DEFAULT_SERVER_STORAGE,
+                        default=CONST.DEFAULT_SERVER_STORAGE,
                         action='store',
                         type=str,
                         help='storage dir path')
@@ -58,13 +58,13 @@ def parse_upload_arguments():
     parser.add_argument('-s',
                         '--src',
                         action='store',
-                        default=DEFAULT_UPLOAD_FILE_PATH,
+                        default=CONST.DEFAULT_UPLOAD_FILE_PATH,
                         type=str,
                         help='source file path')
 
     parser.add_argument('-n',
                         '--name',
-                        default=DEFAULT_UPLOAD_FILE_NAME,
+                        default=CONST.DEFAULT_UPLOAD_FILE_NAME,
                         action='store',
                         type=str,
                         help='file name')
@@ -96,7 +96,7 @@ def parse_download_arguments():
 
     parser.add_argument('-d',
                         '--dst',
-                        default=DEFAULT_DOWNLOAD_DST,
+                        default=CONST.DEFAULT_DOWNLOAD_DST,
                         metavar='FILEPATH',
                         action='store',
                         type=str,
@@ -104,7 +104,7 @@ def parse_download_arguments():
 
     parser.add_argument('-n',
                         '--name',
-                        default=DEFAULT_DOWNLOAD_FILE_NAME,
+                        default=CONST.DEFAULT_DOWNLOAD_FILE_NAME,
                         metavar='FILENAME',
                         action='store',
                         type=str,
@@ -145,14 +145,14 @@ def _add_common_args(parser: argparse.ArgumentParser):
 
     parser.add_argument('-H',
                         '--host',
-                        default=DEFAULT_HOST,
+                        default=CONST.DEFAULT_HOST,
                         action='store',
                         type=str,
                         help='server IP address')
 
     parser.add_argument('-p',
                         '--port',
-                        default=DEFAULT_PORT,
+                        default=CONST.DEFAULT_PORT,
                         action='store',
                         type=int,
                         help='server port')

@@ -1,11 +1,8 @@
 import logging
-from socket import *
-from threading import *
+from threading import Thread
 
-from lib.message import *
-from lib.logging_msg import *
-from lib.constants import *
-from lib.connection import Connection
+import lib.logging_msg as MSG
+import lib.constants as CONST
 
 
 class Client:
@@ -15,7 +12,7 @@ class Client:
         return
 
     def start(self):
-        self.connection.socket.settimeout(TIME_OUT)
+        self.connection.socket.settimeout(CONST.TIME_OUT)
         server_address = self.connection.protocol.perform_client_side_handshake(self.connection)
         self.connection.destination_host, self.connection.destination_port = server_address
         return
@@ -44,5 +41,5 @@ class Client:
         thread_sender.start()
         thread_sender.join()
         thread_receiver.join()
-        logging.info(f"{MSG_CONNECTION_ENDED}")
+        logging.info(f"{MSG.MSG_CONNECTION_ENDED}")
         return

@@ -1,7 +1,6 @@
 from lib.constants import FILE_MODE_READ, FILE_MODE_WRITE
 import logging
 import os
-from lib.logging_msg import *
 
 
 class FileManager:

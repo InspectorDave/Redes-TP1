@@ -1,9 +1,7 @@
 from lib.args_parser import parse_download_arguments
 from lib.client import Client
 from lib.connection import Connection
-from lib.constants import *
-from lib.file_manager import *
-from lib.log import prepare_logging
+from lib.log import logging, prepare_logging
 from lib.protocols.protocol import Protocol
 from lib.protocols.protocol_factory import ProtocolFactory
 

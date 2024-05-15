@@ -1,9 +1,9 @@
-from socket import *
-from threading import *
+from socket import AF_INET, SOCK_DGRAM, socket
+from threading import Condition, Event, Timer
 import logging
 
-from lib.constants import *
-from lib.logging_msg import *
+import lib.constants as CONST
+import lib.logging_msg as MSG
 
 
 class Connection:
@@ -17,7 +17,7 @@ class Connection:
         self.thread_manager = Condition()
         self.sender_receiver_communication_queue = []
         self.end_connection_flag = Event()
-        self.timeout_time = IDLE_TIMEOUT
+        self.timeout_time = CONST.IDLE_TIMEOUT
         self.timeout_timer = Timer(self.timeout_time, self.end_connection)
 
     def wake_up_threads(self):
@@ -33,7 +33,7 @@ class Connection:
         return
 
     def end_connection(self):
-        logging.info(f"{MSG_KEEP_ALIVE_TIMEOUT}")
+        logging.info(f"{MSG.MSG_KEEP_ALIVE_TIMEOUT}")
         self.timeout_timer.cancel()
         self.end_connection_flag.set()
         self.wake_up_threads()
