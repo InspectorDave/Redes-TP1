@@ -17,7 +17,7 @@ class GoBackN(Protocol):
         thread_manager = connection.thread_manager
         thread_manager.acquire()
 
-        last_sent_sequence_number = 1   # random.randint(1, 1023)
+        last_sent_sequence_number = 1
 
         file_manager = FileManager(
             FILE_MODE_READ, file_path, connection.file_name)
@@ -178,8 +178,7 @@ class GoBackN(Protocol):
                         f"{MSG.MSG_WITH_SEQUENCE_N} "
                         f"{str(decoded_message.sequence_number)}")
                     if last_sequence_number == \
-                       decoded_message.sequence_number - 1\
-                       or last_sequence_number == 0:
+                       decoded_message.sequence_number - 1:
                         file_manager.write_file_bytes(decoded_message.payload)
                         logging.debug(f"{MSG.MSG_WRITING_FILE_PATH} "
                                       f"{storage_path + connection.file_name}")
