@@ -1,5 +1,5 @@
-from lib.constants import *
 import struct
+
 
 class Message:
     FIXED_HEADER_SIZE = 1
@@ -10,12 +10,13 @@ class Message:
     SENACK = 3
     ESTABLISHED = 4
 
+
 class Decoder:
     @staticmethod
     def decode_fixed_header(data):
         message_type = struct.unpack("!B", data)[0]
         return message_type
-    
+
     @staticmethod
     def decode_after_fixed_header(message_type, data):
         if message_type == Message.INITIATE:
@@ -30,6 +31,7 @@ class Decoder:
             return Established.decode_after_fixed_header(data)
         else:
             raise ValueError("Invalid message type")
+
 
 class MessageClassFactory:
     @staticmethod
@@ -47,25 +49,28 @@ class MessageClassFactory:
         else:
             raise ValueError("Invalid message type")
 
+
 class Initiate(Message):
-    MESSAGE_SIZE = 3 # message_type + transfer_type + protocol_type
+    MESSAGE_SIZE = 3    # message_type + transfer_type + protocol_type
 
     def __init__(self, transfer_type, protocol_type):
         self.message_type = Message.INITIATE
         self.transfer_type = transfer_type
         self.protocol_type = protocol_type
         return
-    
+
     def encode(self):
-        return struct.pack("!BBB", self.message_type, self.transfer_type, self.protocol_type)
+        return struct.pack(
+            "!BBB", self.message_type, self.transfer_type, self.protocol_type)
 
     @staticmethod
     def decode_after_fixed_header(data):
         transfer_type, protocol_type = struct.unpack("!BB", data)
         return Initiate(transfer_type, protocol_type)
 
+
 class Inack(Message):
-    MESSAGE_SIZE = 3 # message_type + transfer_type + protocol_type
+    MESSAGE_SIZE = 3    # message_type + transfer_type + protocol_type
 
     def __init__(self, transfer_type, protocol_type):
         self.message_type = Message.INACK
@@ -74,15 +79,17 @@ class Inack(Message):
         return
 
     def encode(self):
-        return struct.pack("!BBB", self.message_type, self.transfer_type, self.protocol_type)
+        return struct.pack(
+            "!BBB", self.message_type, self.transfer_type, self.protocol_type)
 
     @staticmethod
     def decode_after_fixed_header(data):
         transfer_type, protocol_type = struct.unpack("!BB", data)
         return Inack(transfer_type, protocol_type)
 
+
 class Established(Message):
-    MESSAGE_SIZE = 1 # message_type
+    MESSAGE_SIZE = 1    # message_type
 
     def __init__(self, filename):
         self.message_type = Message.ESTABLISHED
@@ -92,30 +99,35 @@ class Established(Message):
     def encode(self):
         filename_bytes = self.filename.encode('utf-8')
         filename_length = len(filename_bytes)
-        return struct.pack("!B", self.message_type) + struct.pack("!H", filename_length) + filename_bytes
-        #return struct.pack("!B", self.message_type)
+        return struct.pack(
+            "!B", self.message_type) + \
+            struct.pack("!H", filename_length) + \
+            filename_bytes
 
     @staticmethod
     def decode_after_fixed_header(data):
-        filename_length = struct.unpack("!H", data[:2])[0] #H=2 Bytes size
-        filename_bytes = data[2:2+filename_length] #Desde Byte 2 hasta el nombre
+        filename_length = struct.unpack("!H", data[:2])[0]
+        filename_bytes = data[2:2 + filename_length]
         filename = filename_bytes.decode('utf-8')
         return Established(filename)
-        #return Established()
+
 
 class Send(Message):
-    VARIABLE_HEADER_SIZE = 4 # sequence_number
+    VARIABLE_HEADER_SIZE = 4    # sequence_number
     PAYLOAD_SIZE = 1000
-    MESSAGE_SIZE = Message.FIXED_HEADER_SIZE + VARIABLE_HEADER_SIZE + PAYLOAD_SIZE # message_type + sequence_number + payload
+    MESSAGE_SIZE = Message.FIXED_HEADER_SIZE + \
+        VARIABLE_HEADER_SIZE + \
+        PAYLOAD_SIZE
 
     def __init__(self, sequence_number, payload):
         self.message_type = Message.SEND
         self.sequence_number = sequence_number
         self.payload = payload
         return
-    
+
     def encode(self):
-        return struct.pack("!BI", self.message_type, self.sequence_number) + self.payload
+        return struct.pack(
+            "!BI", self.message_type, self.sequence_number) + self.payload
 
     @staticmethod
     def decode_after_fixed_header(data):
@@ -126,14 +138,15 @@ class Send(Message):
         payload = data[Send.VARIABLE_HEADER_SIZE:]
         return Send(sequence_number, payload)
 
+
 class Senack(Message):
-    MESSAGE_SIZE = 5 # message_type + ack_number
+    MESSAGE_SIZE = 5    # message_type + ack_number
 
     def __init__(self, ack_number):
         self.message_type = Message.SENACK
         self.ack_number = ack_number
         return
-    
+
     def encode(self):
         return struct.pack("!BI", self.message_type, self.ack_number)
 
@@ -141,4 +154,3 @@ class Senack(Message):
     def decode_after_fixed_header(data):
         ack_number = struct.unpack("!I", data)[0]
         return Senack(ack_number)
-    

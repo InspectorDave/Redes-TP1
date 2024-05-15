@@ -1,19 +1,18 @@
 import random
-from threading import *
 import logging
-from socket import *
 
 from lib.protocols.protocol import Protocol
 from lib.file_manager import FileManager
-from lib.logging_msg import *
-from lib.constants import *
+import lib.logging_msg as MSG
+import lib.constants as CONST
 from lib.message import Send, Senack
+
 
 class StopAndWaitProtocol(Protocol):
     CODE = 0
 
     @staticmethod
-    def uploader_sender_logic(connection, file_path):        
+    def uploader_sender_logic(connection, file_path):
         communication_queue = connection.sender_receiver_communication_queue
         thread_manager = connection.thread_manager
         thread_manager.acquire()
@@ -22,16 +21,22 @@ class StopAndWaitProtocol(Protocol):
         last_sent_sequence_number = sequence_number
         last_received_ack_number = 0
 
-        file_manager = FileManager(FILE_MODE_READ, file_path, connection.file_name)
+        file_manager = FileManager(
+            CONST.FILE_MODE_READ, file_path, connection.file_name)
         file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
-        
-        logging.info(f"{MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
-        while file_chunk or last_sent_sequence_number != last_received_ack_number:
+
+        logging.info(f"{MSG.MSG_SENDING_FILE_USING_STOP_AND_WAIT}")
+        while (file_chunk or last_sent_sequence_number !=
+               last_received_ack_number):
 
             message = Send(sequence_number, file_chunk)
-            sent = Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
+            Protocol.send_message(
+                connection.socket, connection.destination_host,
+                connection.destination_port, message)
             last_sent_sequence_number = sequence_number
-            logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}" )
+            logging.debug(f"{MSG.MSG_SENT_TYPE} {str(message.message_type)} "
+                          f"{MSG.MSG_WITH_SEQUENCE_N} "
+                          f"{str(message.sequence_number)}")
             thread_manager.notify()
             thread_manager.wait()
 
@@ -41,7 +46,7 @@ class StopAndWaitProtocol(Protocol):
             try:
                 received_message = communication_queue.pop(0)
             except IndexError:
-                logging.debug(f"{MSG_NO_ACK_RECEIVED}")
+                logging.debug(f"{MSG.MSG_NO_ACK_RECEIVED}")
                 continue
 
             connection.reset_timer()
@@ -52,8 +57,8 @@ class StopAndWaitProtocol(Protocol):
                 file_chunk = file_manager.read_file_bytes(Send.PAYLOAD_SIZE)
 
         if not file_chunk:
-            logging.info(f"{MSG_FILE_SENT}")
-        logging.debug(f"{MSG_UPLOADER_SENDER_THREAD_ENDING}")
+            logging.info(f"{MSG.MSG_FILE_SENT}")
+        logging.debug(f"{MSG.MSG_UPLOADER_SENDER_THREAD_ENDING}")
         file_manager.close()
         connection.end_connection_flag.set()
         connection.timeout_timer.cancel()
@@ -71,7 +76,8 @@ class StopAndWaitProtocol(Protocol):
 
         while True:
             try:
-                decoded_message, downloader_address = Protocol.decode_received_message(connection.socket)
+                decoded_message = \
+                    Protocol.decode_received_message(connection.socket)[0]
             except TimeoutError:
                 connection.wake_up_threads()
                 if connection.end_connection_flag.is_set():
@@ -79,12 +85,15 @@ class StopAndWaitProtocol(Protocol):
                 continue
 
             thread_manager.acquire()
-            logging.debug(f"{MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG_WITH_ACK_N} {str(decoded_message.ack_number)}" )
+            logging.debug(f"{MSG.MSG_RECEIVED_MSG_TYPE} "
+                          f"{str(decoded_message.message_type)} "
+                          f"{MSG.MSG_WITH_ACK_N} "
+                          f"{str(decoded_message.ack_number)}")
             communication_queue.append(decoded_message)
             thread_manager.notify()
             thread_manager.release()
 
-        logging.debug(f"{MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
+        logging.debug(f"{MSG.MSG_UPLOADER_RECEIVER_THREAD_ENDING}")
 
     @staticmethod
     def downloader_sender_logic(connection):
@@ -97,11 +106,16 @@ class StopAndWaitProtocol(Protocol):
             if connection.end_connection_flag.is_set():
                 break
             message = communication_queue.pop(0)
-            Protocol.send_message(connection.socket, connection.destination_host, connection.destination_port, message)
-            logging.debug(f"{MSG_SENT_TYPE} {str(message.message_type)} {MSG_WITH_ACK_N} {str(message.ack_number)}")
+            Protocol.send_message(
+                connection.socket, connection.destination_host,
+                connection.destination_port, message)
+            logging.debug(f"{MSG.MSG_SENT_TYPE} "
+                          f"{str(message.message_type)} "
+                          f"{MSG.MSG_WITH_ACK_N} "
+                          f"{str(message.ack_number)}")
 
         thread_manager.release()
-        logging.debug(f"{MSG_DOWNLOADER_SENDING_THREAD_ENDING}")
+        logging.debug(f"{MSG.MSG_DOWNLOADER_SENDING_THREAD_ENDING}")
 
     @staticmethod
     def downloader_receiver_logic(connection, storage_path):
@@ -109,19 +123,23 @@ class StopAndWaitProtocol(Protocol):
         thread_manager = connection.thread_manager
         last_sequence_number = 0
 
-        logging.debug(f"{MSG_STORAGE_PATH} {storage_path}")
-        file_manager = FileManager(FILE_MODE_WRITE, storage_path, connection.file_name)
-        while connection.end_connection_flag.is_set() == False:
+        logging.debug(f"{MSG.MSG_STORAGE_PATH} {storage_path}")
+        file_manager = FileManager(
+            CONST.FILE_MODE_WRITE, storage_path, connection.file_name)
+        while connection.end_connection_flag.is_set() is False:
             try:
-                decoded_message, client_address = Protocol.decode_received_message(connection.socket)
+                decoded_message = \
+                    Protocol.decode_received_message(connection.socket)[0]
             except TimeoutError:
                 continue
 
             thread_manager.acquire()
             connection.reset_timer()
-            if last_sequence_number == decoded_message.sequence_number - 1 or last_sequence_number == 0:
+            if last_sequence_number == decoded_message.sequence_number - 1 or \
+               last_sequence_number == 0:
                 file_manager.write_file_bytes(decoded_message.payload)
-                logging.debug(f"{MSG_WRITING_FILE_PATH} {storage_path + connection.file_name}")
+                logging.debug(f"{MSG.MSG_WRITING_FILE_PATH} "
+                              f"{storage_path + connection.file_name}")
             last_sequence_number = decoded_message.sequence_number
             message_ack = Senack(decoded_message.sequence_number)
             communication_queue.append(message_ack)
@@ -129,4 +147,4 @@ class StopAndWaitProtocol(Protocol):
             thread_manager.release()
 
         file_manager.close()
-        logging.debug(f"{MSG_DOWNLOADER_RECEIVER_THREAD_ENDING}")
+        logging.debug(f"{MSG.MSG_DOWNLOADER_RECEIVER_THREAD_ENDING}")
