@@ -20,14 +20,18 @@ class Server:
         logging.info(f"{MSG.MSG_SERVER_READY_TO_RECEIVE}")
 
         while True:
-            message, clientAddress = Protocol.decode_received_message(serverSocket)
-            new_connection_thread = Thread(target=self.__process_new_connetion, args=(message, clientAddress))
+            message, clientAddress = \
+                Protocol.decode_received_message(serverSocket)
+            new_connection_thread = Thread(
+                target=self.__process_new_connetion,
+                args=(message, clientAddress))
             new_connection_thread.start()
 
     def __process_new_connetion(self, message, clientAddress):
         logging.info(f"{MSG.MSG_PROCESSING_NEW_CONNECTION}")
 
-        connection = Protocol.perform_server_side_handshake(self, message, clientAddress)
+        connection = Protocol.perform_server_side_handshake(
+            self, message, clientAddress)
         connection.timeout_timer.start()
 
         connection.socket.settimeout(CONST.TIME_OUT)
@@ -38,18 +42,26 @@ class Server:
         match connection.transfer_type:
             case Protocol.UPLOAD:
                 # The server is the downloader
-                logging.info(f"{MSG.MSG_DOWNLOADING_FILE} {MSG.MSG_WITH_PROTOCOL} {connection.protocol.__class__.__name__}")
-                thread_receiver = Thread(target=connection.protocol.downloader_receiver_logic,
-                                         args=(connection, self.storage))
-                thread_sender = Thread(target=connection.protocol.downloader_sender_logic,
-                                       args=(connection,))
+                logging.info(f"{MSG.MSG_DOWNLOADING_FILE} "
+                             f"{MSG.MSG_WITH_PROTOCOL} "
+                             f"{connection.protocol.__class__.__name__}")
+                thread_receiver = Thread(
+                    target=connection.protocol.downloader_receiver_logic,
+                    args=(connection, self.storage))
+                thread_sender = Thread(
+                    target=connection.protocol.downloader_sender_logic,
+                    args=(connection,))
             case Protocol.DOWNLOAD:
                 # The server is the uploader
-                logging.info(f"{MSG.MSG_UPLOADING_FILE} {MSG.MSG_WITH_PROTOCOL} {connection.protocol.__class__.__name__}")
-                thread_receiver = Thread(target=connection.protocol.uploader_receiver_logic,
-                                         args=(connection,))
-                thread_sender = Thread(target=connection.protocol.uploader_sender_logic,
-                                       args=(connection, self.storage))
+                logging.info(f"{MSG.MSG_UPLOADING_FILE} "
+                             f"{MSG.MSG_WITH_PROTOCOL} "
+                             f"{connection.protocol.__class__.__name__}")
+                thread_receiver = Thread(
+                    target=connection.protocol.uploader_receiver_logic,
+                    args=(connection,))
+                thread_sender = Thread(
+                    target=connection.protocol.uploader_sender_logic,
+                    args=(connection, self.storage))
 
         thread_receiver.start()
         thread_sender.start()

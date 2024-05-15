@@ -4,7 +4,8 @@ import os
 
 
 def parse_server_arguments():
-    parser = argparse.ArgumentParser(prog='start-server.py', description='<command description>')
+    parser = argparse.ArgumentParser(prog='start-server.py',
+                                     description='<command description>')
     group_verbosity = parser.add_mutually_exclusive_group(required=False)
 
     group_verbosity.add_argument('-v',
@@ -52,7 +53,8 @@ def _verify_server_arguments(args):
 
 
 def parse_upload_arguments():
-    parser = argparse.ArgumentParser(prog='upload.py', description='<command description>')
+    parser = argparse.ArgumentParser(prog='upload.py',
+                                     description='<command description>')
     _add_common_args(parser)
 
     parser.add_argument('-s',
@@ -86,12 +88,14 @@ def _verify_upload_arguments(args):
     if not os.path.exists(full_name):
         raise FileNotFoundError(f"Directory '{full_name}' does not exist.")
     if args.protocol != 's' and args.protocol != 'g':
-        raise Exception("Incorrect protocol. Try using 's' for Stop And Wait or 'g' for Go Back N")
+        raise Exception(
+            "Incorrect protocol. Use 's' or 'g'")
     return
 
 
 def parse_download_arguments():
-    parser = argparse.ArgumentParser(prog='download.py', description='<command description>')
+    parser = argparse.ArgumentParser(prog='download.py',
+                                     description='<command description>')
     _add_common_args(parser)
 
     parser.add_argument('-d',
@@ -126,7 +130,8 @@ def _verify_download_arguments(args):
     if not os.path.exists(args.dst):
         os.mkdir(args.dst)
     if args.protocol != 's' and args.protocol != 'g':
-        raise Exception("Incorrect protocol. Try using 's' for Stop And Wait or 'g' for Go Back N")
+        raise Exception(
+            "Incorrect protocol. Use 's' or 'g'")
     return
 
 

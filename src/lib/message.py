@@ -60,7 +60,8 @@ class Initiate(Message):
         return
 
     def encode(self):
-        return struct.pack("!BBB", self.message_type, self.transfer_type, self.protocol_type)
+        return struct.pack(
+            "!BBB", self.message_type, self.transfer_type, self.protocol_type)
 
     @staticmethod
     def decode_after_fixed_header(data):
@@ -78,7 +79,8 @@ class Inack(Message):
         return
 
     def encode(self):
-        return struct.pack("!BBB", self.message_type, self.transfer_type, self.protocol_type)
+        return struct.pack(
+            "!BBB", self.message_type, self.transfer_type, self.protocol_type)
 
     @staticmethod
     def decode_after_fixed_header(data):
@@ -97,7 +99,10 @@ class Established(Message):
     def encode(self):
         filename_bytes = self.filename.encode('utf-8')
         filename_length = len(filename_bytes)
-        return struct.pack("!B", self.message_type) + struct.pack("!H", filename_length) + filename_bytes
+        return struct.pack(
+            "!B", self.message_type) + \
+            struct.pack("!H", filename_length) + \
+            filename_bytes
         # return struct.pack("!B", self.message_type)
 
     @staticmethod
@@ -112,7 +117,9 @@ class Established(Message):
 class Send(Message):
     VARIABLE_HEADER_SIZE = 4    # sequence_number
     PAYLOAD_SIZE = 1000
-    MESSAGE_SIZE = Message.FIXED_HEADER_SIZE + VARIABLE_HEADER_SIZE + PAYLOAD_SIZE    # message_type + sequence_number + payload
+    MESSAGE_SIZE = Message.FIXED_HEADER_SIZE + \
+        VARIABLE_HEADER_SIZE + \
+        PAYLOAD_SIZE    # message_type + sequence_number + payload
 
     def __init__(self, sequence_number, payload):
         self.message_type = Message.SEND
@@ -121,7 +128,8 @@ class Send(Message):
         return
 
     def encode(self):
-        return struct.pack("!BI", self.message_type, self.sequence_number) + self.payload
+        return struct.pack(
+            "!BI", self.message_type, self.sequence_number) + self.payload
 
     @staticmethod
     def decode_after_fixed_header(data):

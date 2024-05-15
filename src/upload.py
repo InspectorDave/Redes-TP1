@@ -13,7 +13,8 @@ if __name__ == "__main__":
         exit(-1)
     prepare_logging(args)
     protocol = ProtocolFactory.create_from_arguments(args.protocol)
-    connection = Connection((args.host, args.port), Protocol.UPLOAD, protocol, args.name)
+    connection = Connection((args.host, args.port), Protocol.UPLOAD,
+                            protocol, args.name)
     client = Client(connection, args.src)
     client.start()
     client.upload()

@@ -44,7 +44,10 @@ class GoBackN(Protocol):
                     connection.destination_host,
                     connection.destination_port,
                     message)
-                logging.debug(f"{MSG.MSG_SENT_TYPE} {str(message.message_type)} {MSG.MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}")
+                logging.debug(f"{MSG.MSG_SENT_TYPE} "
+                              f"{str(message.message_type)} "
+                              f"{MSG.MSG_WITH_SEQUENCE_N} "
+                              f"{str(message.sequence_number)}")
 
                 messages_not_ackd.append(message)
                 last_sent_sequence_number += 1
@@ -57,7 +60,10 @@ class GoBackN(Protocol):
                                           connection.destination_host,
                                           connection.destination_port,
                                           message)
-                    logging.debug(f"{MSG.MSG_SENT_TYPE} {str(message.message_type)} {MSG.MSG_WITH_SEQUENCE_N} {str(message.sequence_number)}")
+                    logging.debug(f"{MSG.MSG_SENT_TYPE} "
+                                  f"{str(message.message_type)} "
+                                  f"{MSG.MSG_WITH_SEQUENCE_N} "
+                                  f"{str(message.sequence_number)}")
 
                 resend_window_flag.clear()
                 GoBackN.reset_timer(resend_window_timer, resend_window_flag)
@@ -70,8 +76,11 @@ class GoBackN(Protocol):
             while len(communication_queue) > 0:
                 received_message = communication_queue.pop(0)
                 connection.reset_timer()
-                while len(messages_not_ackd) > 0 and received_message.ack_number >= messages_not_ackd[0].sequence_number:
-                    if received_message.ack_number == messages_not_ackd[0].sequence_number:
+                while (len(messages_not_ackd) > 0 and
+                       received_message.ack_number >=
+                       messages_not_ackd[0].sequence_number):
+                    if received_message.ack_number ==\
+                       messages_not_ackd[0].sequence_number:
                         GoBackN.reset_timer(resend_window_timer,
                                             resend_window_flag)
                     messages_not_ackd.pop(0)
@@ -109,9 +118,13 @@ class GoBackN(Protocol):
                 # if connection.end_connection_flag.is_set():
                 #     break
                 connection.reset_timer()
-                decoded_message, buffer = Protocol.decode_message_from_buffer(buffer)
+                decoded_message, buffer = \
+                    Protocol.decode_message_from_buffer(buffer)
                 logging.debug(
-                    f"{MSG.MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG.MSG_WITH_ACK_N} {str(decoded_message.ack_number)}")
+                    f"{MSG.MSG_RECEIVED_MSG_TYPE} "
+                    f"{str(decoded_message.message_type)} "
+                    f"{MSG.MSG_WITH_ACK_N} "
+                    f"{str(decoded_message.ack_number)}")
                 communication_queue.append(decoded_message)
 
             thread_manager.notify()
@@ -135,7 +148,10 @@ class GoBackN(Protocol):
                                       connection.destination_host,
                                       connection.destination_port,
                                       message)
-                logging.debug(f"{MSG.MSG_SENT_TYPE} {str(message.message_type)} {MSG.MSG_WITH_ACK_N} {str(message.ack_number)}")
+                logging.debug(f"{MSG.MSG_SENT_TYPE} "
+                              f"{str(message.message_type)} "
+                              f"{MSG.MSG_WITH_ACK_N} "
+                              f"{str(message.ack_number)}")
 
         thread_manager.release()
         logging.debug(f"{MSG.MSG_DOWNLOADER_SENDING_THREAD_ENDING}")
@@ -156,12 +172,19 @@ class GoBackN(Protocol):
                 thread_manager.acquire()
                 connection.reset_timer()
                 while len(buffer) > 0:
-                    decoded_message, buffer = Protocol.decode_message_from_buffer(buffer)
+                    decoded_message, buffer = \
+                        Protocol.decode_message_from_buffer(buffer)
                     logging.debug(
-                        f"{MSG.MSG_RECEIVED_MSG_TYPE} {str(decoded_message.message_type)} {MSG.MSG_WITH_SEQUENCE_N} {str(decoded_message.sequence_number)}")
-                    if last_sequence_number == decoded_message.sequence_number - 1 or last_sequence_number == 0:
+                        f"{MSG.MSG_RECEIVED_MSG_TYPE} "
+                        f"{str(decoded_message.message_type)} "
+                        f"{MSG.MSG_WITH_SEQUENCE_N} "
+                        f"{str(decoded_message.sequence_number)}")
+                    if last_sequence_number == \
+                       decoded_message.sequence_number - 1\
+                       or last_sequence_number == 0:
                         file_manager.write_file_bytes(decoded_message.payload)
-                        logging.debug(f"{MSG.MSG_WRITING_FILE_PATH} {storage_path + connection.file_name}")
+                        logging.debug(f"{MSG.MSG_WRITING_FILE_PATH} "
+                                      f"{storage_path + connection.file_name}")
                         last_sequence_number = decoded_message.sequence_number
                     message_ack = Senack(last_sequence_number)
                     communication_queue.append(message_ack)

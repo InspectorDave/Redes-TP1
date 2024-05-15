@@ -14,14 +14,16 @@ class FileManager:
         if mode == FILE_MODE_READ:
             self.open_to_read(filepath, filename)
             if not os.path.exists(filepath):
-                raise FileNotFoundError(f"El directorio '{filepath}' no existe.")
+                raise FileNotFoundError(
+                    f"El directorio '{filepath}' no existe.")
 
         elif mode == FILE_MODE_WRITE:
             if not os.path.exists(filepath):
                 os.makedirs(filepath)
                 logging.debug(f"Directorio '{filepath}' creado exitosamente.")
             else:
-                logging.debug(f"Se utilizará el directorio existente: '{filepath}'.")
+                logging.debug(
+                    f"Se utilizará el directorio existente: '{filepath}'.")
             self.open_to_write(filepath, filename)
 
         else:
@@ -41,7 +43,8 @@ class FileManager:
         try:
             self.file = open(os.path.join(filepath, filename), 'wb')
         except Exception as e:
-            raise Exception(f"Error desconocido al abrir el archivo para escribir: {e}")
+            raise Exception(
+                f"Error desconocido al abrir el archivo para escribir: {e}")
 
     def read_file_bytes(self, chunk_size):
         try:

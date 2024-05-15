@@ -7,7 +7,8 @@ import lib.logging_msg as MSG
 
 
 class Connection:
-    def __init__(self, destination_address, transfer_type, protocol, file_name):
+    def __init__(
+            self, destination_address, transfer_type, protocol, file_name):
         self.destination_host = destination_address[0]
         self.destination_port = destination_address[1]
         self.socket = socket(AF_INET, SOCK_DGRAM)

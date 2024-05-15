@@ -13,25 +13,31 @@ class Client:
 
     def start(self):
         self.connection.socket.settimeout(CONST.TIME_OUT)
-        server_address = self.connection.protocol.perform_client_side_handshake(self.connection)
-        self.connection.destination_host, self.connection.destination_port = server_address
+        server_address = self.connection.protocol.\
+            perform_client_side_handshake(self.connection)
+        self.connection.destination_host, self.connection.destination_port \
+            = server_address
         return
 
     def upload(self):
-        thread_receiver = Thread(target=self.connection.protocol.uploader_receiver_logic,
-                                 args=(self.connection,))
-        thread_sender = Thread(target=self.connection.protocol.uploader_sender_logic,
-                               args=(self.connection, self.file_path))
+        thread_receiver = Thread(
+            target=self.connection.protocol.uploader_receiver_logic,
+            args=(self.connection,))
+        thread_sender = Thread(
+            target=self.connection.protocol.uploader_sender_logic,
+            args=(self.connection, self.file_path))
 
         self.run_threads(thread_receiver, thread_sender)
         return
 
     def download(self):
-        thread_receiver = Thread(target=self.connection.protocol.downloader_receiver_logic,
-                                 args=(self.connection, self.file_path))
+        thread_receiver = Thread(
+            target=self.connection.protocol.downloader_receiver_logic,
+            args=(self.connection, self.file_path))
 
-        thread_sender = Thread(target=self.connection.protocol.downloader_sender_logic,
-                               args=(self.connection,))
+        thread_sender = Thread(
+            target=self.connection.protocol.downloader_sender_logic,
+            args=(self.connection,))
 
         self.run_threads(thread_receiver, thread_sender)
         return
