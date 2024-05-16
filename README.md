@@ -70,10 +70,10 @@ optional arguments:
 
 Para simular la perdida de paquetes en una red local se utilizará la herramienta comcast. Una vez instalada, para simular una pérdida  de paquetes del 10%:
 ```
-comcast -device=lo --packet-loss=10% -target-addr=127.0.0.1
+comcast --device=lo --packet-loss=10% -target-addr=127.0.0.1
 ```
 
 Para detener su ejecución:
 ```
-comcast --stop
+comcast --stop --device=lo
 ```
