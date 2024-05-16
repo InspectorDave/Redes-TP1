@@ -4,7 +4,7 @@ Este es el repositorio para el desarrollo del TP1 de la materia Redes (TA048) de
 
 # Objetivo
 
-En este trabajo práctico se busca implementar un protocolo stop and wait y un protocolo GoBackN sobre el protocolo de transporte UDP. Para lo cual se implementará una estructura cliente-servidor, en la que el servidor pueda mantener varias conexiones activas simultáneas.
+En este trabajo práctico se busca implementar una transferencia de archivos utilizando un protocolo Stop & Wait y luego un protocolo Go Back N sobre el protocolo de transporte UDP. Para lo cual se implementará una estructura cliente-servidor, en la que el servidor pueda mantener varias conexiones activas simultáneas.
 
 # Integrantes
 
@@ -64,4 +64,16 @@ optional arguments:
 -d, --dst destination file path
 -n, --name file name
 -r,  pRotocol type, can be 's' or 'g'
+```
+
+# Cómo configurar comcast
+
+Para simular la perdida de paquetes en una red local se utilizará la herramienta comcast. Una vez instalada, para simular una pérdida  de paquetes del 10%:
+```
+comcast -device=lo --packet-loss=10% -target-addr=127.0.0.1
+```
+
+Para detener su ejecución:
+```
+comcast --stop
 ```
